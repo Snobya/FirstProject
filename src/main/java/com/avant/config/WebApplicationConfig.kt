@@ -13,7 +13,9 @@ import org.springframework.web.servlet.config.annotation.*
 @ComponentScan
 class WebApplicationConfig : WebMvcConfigurer {
 	
-	private val RESOURCE_LOCATIONS = arrayOf("classpath:/META-INF/resources/", "classpath:/resources/", "classpath:/static/", "classpath:/public/", "classpath:/resources/static/", "classpath:/src/main/resources/static/")
+	private val RESOURCE_LOCATIONS = arrayOf("classpath:/META-INF/resources/",
+			"classpath:/resources/", "classpath:/static/", "classpath:/public/",
+			"classpath:/resources/static/", "classpath:/src/main/resources/static/")
 	
 	override fun addResourceHandlers(registry: ResourceHandlerRegistry?) {
 		if (!registry!!.hasMappingForPattern("/api/**")) {
@@ -34,10 +36,4 @@ class WebApplicationConfig : WebMvcConfigurer {
 		registry!!.addInterceptor(AccessInterceptor()).addPathPatterns("/**")
 	}
 	
-}
-
-class AccessInterceptor : HandlerInterceptor {
-
-
-
 }

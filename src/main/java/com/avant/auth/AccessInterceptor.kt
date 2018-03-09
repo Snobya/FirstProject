@@ -88,9 +88,10 @@ class AccessInterceptor : HandlerInterceptorAdapter() {
 					request.getParameter("sessionId")
 			}
 			
-			return if (token == null) {
-				null
-			} else AuthController.getUser(token)
+			return null //TODO fix this
+			//			return if (token == null) {
+			//				null
+			//			} else AuthController.getUser(token)
 		}
 	}
 	
