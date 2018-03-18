@@ -53,7 +53,7 @@ class ControllerAdvisor : ResponseBodyAdvice<Any> {
 			.append(ex.javaClass.name).append("  ->  ")
 			.append(ex.localizedMessage).append("\n")
 		ex.stackTrace
-			.filter { it.className.startsWith("com.taxi") }
+			.filter { it.className.startsWith("com.avant") }
 			.forEach {
 				sb.append(it.className).append(" : ").append(it.methodName).append(" @ line ")
 					.append(it.lineNumber).append("\n")
@@ -71,6 +71,7 @@ class ControllerAdvisor : ResponseBodyAdvice<Any> {
 			"IllegalArgumentException" -> Ret.code(406, sb)
 			"MissingServletRequestParameterException",
 			"HttpRequestMethodNotSupportedException",
+			"FileNotFoundException",
 			"IOException"              -> Ret.code(404, sb)
 			else                       -> Ret.code(503, sb)
 		}
