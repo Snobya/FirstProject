@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/auth")
 class AuthAPI {
 	
-	@GetMapping("/checkAuth")
-	fun checkAuth() {
-	}
+//	@GetMapping("/checkAuth")
+//	fun checkAuth() {
+//	}
 	
 }

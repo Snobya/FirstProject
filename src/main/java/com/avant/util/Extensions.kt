@@ -1,5 +1,7 @@
 package com.avant.util
 
+import java.util.*
+
 fun String.join(middle: String = "", vararg others: String): String {
 	val ret = StringBuilder(this)
 	others.forEach {
@@ -11,3 +13,9 @@ fun String.join(middle: String = "", vararg others: String): String {
 fun Any.print(prefix: String = "") {
 	println(prefix + this.toString())
 }
+
+fun <T> T.isAnyOf(vararg objs: T): Boolean {
+	return objs.any { this == it }
+}
+
+fun Random.int(range: IntRange): Int = this.nextInt(range.endInclusive - range.start) + range.start

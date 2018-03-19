@@ -22,9 +22,12 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 	
 	fun addDate(date: EventDate) {
 		dates.add(date)
-		if (date.startDate.isBefore(closestEvent)) {
-			this.closestEvent = date.startDate
-		}
+		findClosestDate()
+	}
+	
+	fun findClosestDate(): LocalDateTime {
+		closestEvent = this.datelist.sorted().first()
+		return closestEvent
 	}
 	
 	class EventDate(var id: String = UUID.randomUUID().toString().substring(0..7),
@@ -36,6 +39,8 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 	
 	/**
 	 * Event offer class.
+	 * Name - is type of accomodation (deluxe, economy, etc.)
+	 * price map is: student - 2500, teacher - 3500
 	 * prices contains all the prices in map: key-value
 	 */
 	data class EventOffer(var name: String, var prices: MutableMap<String, Double>)

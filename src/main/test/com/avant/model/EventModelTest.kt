@@ -2,6 +2,7 @@ package com.avant.model
 
 import com.avant.entity.Event
 import com.avant.repo.EventRepository
+import com.avant.util.isAnyOf
 import com.avant.util.print
 import org.junit.jupiter.api.*
 
@@ -70,23 +71,52 @@ internal class EventModelTest {
 	
 	@Test
 	fun addContent() {
+		val title = "test-content"
+		val value = UUID.randomUUID().toString()
+		eventModel.addContent(testId, title, value)
+		assertEquals(eventModel.getEvent(testId).content.filter { it.first == title }[0].second, value)
 	}
 	
 	@Test
 	fun removeContent() {
+		addContent()
+		eventModel.removeContent(eventId = testId, key = "test-content")
+		assertEquals(eventModel.getEvent(testId).content.filter { it.first == "test-content" }.size, 0)
 	}
 	
 	@Test
 	fun addPhotos() {
+		val event = eventModel.getEvent(testId)
+		eventModel.addPhotos(testId, "p1", "p2", "p3")
+		assertEquals(event.photos.size + 3, eventModel.getEvent(testId).photos.size)
+	}
+	
+	@Test
+	fun removePhotos() {
+		eventModel.removePhotos(testId, "p1", "p2", "p3")
+		assertEquals(0, eventModel.getEvent(testId).photos.filter { it.isAnyOf("p1", "p2", "p3") }.size)
 	}
 	
 	@Test
 	fun addEventDate() {
+		val date = LocalDateTime.now().plusDays(1)
+		eventModel.addEventDate(testId, date,
+				date.plusHours(20)).datelist
+		assertTrue(eventModel.getEvent(testId).datelist.contains(date))
 	}
 	
 	@Test
 	fun addEventOffer() {
+		val date = eventModel.getEvent(testId).dates[0]
+		eventModel.addEventOffer(testId, date.id, "Deluxe", mapOf("Студент" to 5500.0, "Обычный" to 8000.0))
+		eventModel.addEventOffer(testId, date.id, "Semi-Luxe", mapOf("Студент" to 3500.0, "Обычный" to 6000.0))
+		eventModel.addEventOffer(testId, date.id, "Economy", mapOf("Студент" to 2200.0, "Обычный" to 3000.0))
+		assertEquals(eventModel.getEventOffers(testId, date.id).offers.size, date.offers.size + 3)
+		for (offer in eventModel.getEventOffers(testId, date.id).offers) {
+			assertEquals(offer.prices.size, 2)
+		}
 	}
+	
 	
 	
 }

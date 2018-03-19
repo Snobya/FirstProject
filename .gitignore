@@ -24,3 +24,6 @@ war/WEB-INF/lib/
 
 *\.idea\*
 /.editorconfig
+
+# Docs #
+src/main/resources/static/docs/*

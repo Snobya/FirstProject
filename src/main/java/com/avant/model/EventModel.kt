@@ -41,6 +41,7 @@ class EventModel {
 	}
 	
 	fun addContent(eventId: String, key: String, value: String) = updateEvent(eventId) {
+		it.content.removeIf { it.first == key }
 		it.content.add(key to value)
 	}
 	
@@ -48,22 +49,33 @@ class EventModel {
 		it.content.removeIf { it.first == key }
 	}
 	
-	
 	fun addPhotos(eventId: String, vararg photos: String) = updateEvent(eventId) {
 		photos.forEach { photo -> it.photos.add(photo) }
 	}
 	
+	fun removePhotos(eventId: String, vararg photos: String) = updateEvent(eventId) {
+		it.photos.removeAll(photos)
+	}
 	
 	fun addEventDate(eventId: String, startDate: LocalDateTime, endDate: LocalDateTime) = updateEvent(eventId) {
 		it.addDate(Event.EventDate(startDate = startDate, endDate = endDate))
 	}
 	
+	// TODO Test this
+	fun editEventDate(eventId: String, dateId: String, startDate: LocalDateTime? = null, endDate: LocalDateTime? = null) = updateEvent(eventId) {
+		val date = (it.dates.findOne { it.id == dateId } ?: throw FileNotFoundException("DateId not found"))
+		startDate?.apply { date.startDate = this }
+		endDate?.apply { date.endDate = this }
+		it.findClosestDate()
+	}
 	
 	fun addEventOffer(eventId: String, dateId: String, name: String, prices: Map<String, Double>) = updateEvent(eventId) {
 		val date = it.dates.stream().filter { it.id == dateId }.findAny().orElseThrow { FileNotFoundException("No such date found") }
 		date.offers.add(Event.EventOffer(name, prices = prices.toMutableMap()))
 	}
 	
+	fun getEventOffers(eventId: String, dateId: String) = getEvent(eventId).dates.find { it.id == dateId }
+			?: throw FileNotFoundException("No such date id")
 	
 	private fun updateEvent(eventId: String, function: (Event) -> Unit): Event {
 		var event: Event? = null
@@ -77,4 +89,13 @@ class EventModel {
 	
 	fun getEvent(eventId: String): Event = eventRepo.findById(eventId).orElseThrow { FileNotFoundException("Event doesn't exist") }
 	
+}
+
+private fun <T> Iterable<T>.findOne(function: (T) -> Boolean): T? {
+	for (e in this) {
+		if (function(e)) {
+			return e
+		}
+	}
+	return null
 }
