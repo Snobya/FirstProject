@@ -7,6 +7,6 @@ import java.time.LocalDateTime
 
 interface EventRepository : MongoRepository<Event, String> {
 
-	fun findByClosestDateBetween(start: LocalDateTime, end: LocalDateTime): List<Event>
+	fun findByClosestEventBetween(start: LocalDateTime, end: LocalDateTime): List<Event>
 
 }

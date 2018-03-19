@@ -26,23 +26,23 @@ class EventAPI {
 	 * Returns events by month
 	 * @param month year-month, like 2017-04 or 2018-12
 	 */
-	@GetMapping("/month")
-	fun monthly(@RequestParam month: String): ResponseEntity<*> {
-		val firstDay = LocalDate.parse(month + "-01")
-		val lastDay = firstDay.withMonth(firstDay.lengthOfMonth())
-		return Ret.ok(eventModel.between(firstDay.atStartOfDay(),
-				lastDay.atTime(23, 59)))
-	}
-
-	/**
-	 * Finds events starts between two dates.
-	 * @param beforeDate date, like 2017-03-21
-	 * @param afterDate date as a beforeDate, and after beforeDate
-	 */
-	@GetMapping("/between")
-	fun between(@RequestParam beforeDate: String, @RequestParam afterDate: String): ResponseEntity<*> =
-			Ret.ok(eventModel.between(LocalDate.parse(beforeDate).atStartOfDay(),
-					LocalDate.parse(afterDate).atTime(23, 59)))
+//	@GetMapping("/month")
+//	fun monthly(@RequestParam month: String): ResponseEntity<*> {
+//		val firstDay = LocalDate.parse(month + "-01")
+//		val lastDay = firstDay.withMonth(firstDay.lengthOfMonth())
+//		return Ret.ok(eventModel.between(firstDay.atStartOfDay(),
+//				lastDay.atTime(23, 59)))
+//	}
+//
+//	/**
+//	 * Finds events starts between two dates.
+//	 * @param beforeDate date, like 2017-03-21
+//	 * @param afterDate date as a beforeDate, and after beforeDate
+//	 */
+//	@GetMapping("/between")
+//	fun between(@RequestParam beforeDate: String, @RequestParam afterDate: String): ResponseEntity<*> =
+//			Ret.ok(eventModel.between(LocalDate.parse(beforeDate).atStartOfDay(),
+//					LocalDate.parse(afterDate).atTime(23, 59)))
 
 	/**
 	 * Create event with no dates

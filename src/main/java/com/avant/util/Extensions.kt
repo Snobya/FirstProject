@@ -7,3 +7,7 @@ fun String.join(middle: String = "", vararg others: String): String {
 	}
 	return ret.toString()
 }
+
+fun Any.print(prefix: String = "") {
+	println(prefix + this.toString())
+}

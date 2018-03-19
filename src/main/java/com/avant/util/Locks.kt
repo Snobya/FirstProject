@@ -17,6 +17,6 @@ object Locks {
 	}
 
 	fun withBlock(lockId: String, function: () -> Unit) {
-		runBlocking { withBlock(lockId, function) }
+		runBlocking { withLock(lockId, function) }
 	}
 }
