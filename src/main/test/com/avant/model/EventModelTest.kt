@@ -27,7 +27,7 @@ internal class EventModelTest {
 	private val testId = "test-event-id"
 	
 	@BeforeAll
-	fun createIfNotExist() {
+	fun setup() {
 		var event: Event
 		try {
 			event = eventModel.getEvent(testId)
@@ -52,7 +52,7 @@ internal class EventModelTest {
 	
 	@Test
 	fun between() {
-		assertNotEquals(eventModel.between(LocalDateTime.now(), LocalDateTime.now().plusYears(30)).size, 0)
+		assertNotEquals(eventModel.between(LocalDateTime.now().minusYears(1), LocalDateTime.now().plusYears(30)).size, 0)
 	}
 	
 	@Test
@@ -116,7 +116,6 @@ internal class EventModelTest {
 			assertEquals(offer.prices.size, 2)
 		}
 	}
-	
 	
 	
 }
