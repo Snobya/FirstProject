@@ -125,6 +125,7 @@ class EventAPI {
 	
 	/**
 	 * Add a date to event. Notice: this doesn't add any offers to event.
+	 * Notice: dates should be send like that: 2018-02-28T15:40:20 (seconds can be dropped)
 	 */
 	@PostMapping("/date/add")
 	fun dateAdd(@RequestParam id: String,
@@ -136,7 +137,7 @@ class EventAPI {
 	}
 	
 	/**
-	 * Edit order's dates
+	 * Edit order's dates. Notice: dates should be send like that: 2018-02-28T15:40:20 (seconds can be dropped)
 	 */
 	@PostMapping("/date/edit")
 	fun dateEdit(@RequestParam id: String,
@@ -152,8 +153,8 @@ class EventAPI {
 	 * Offers manipulation will be added later (20-21.03)
 	 */
 	@PostMapping("/offers/todo")
-	fun todoOffers (): ResponseEntity<*> {
-	    return Ret.code(500, "Not implemented")
+	fun todoOffers(): ResponseEntity<*> {
+		return Ret.code(500, "Not implemented")
 	}
 	
 	//	@PostMapping("/postSomething")
