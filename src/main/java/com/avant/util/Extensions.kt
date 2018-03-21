@@ -19,3 +19,12 @@ fun <T> T.isAnyOf(vararg objs: T): Boolean {
 }
 
 fun Random.int(range: IntRange): Int = this.nextInt(range.endInclusive - range.start) + range.start
+
+fun <T> Iterable<T>.findOne(function: (T) -> Boolean): T? {
+	for (e in this) {
+		if (function(e)) {
+			return e
+		}
+	}
+	return null
+}

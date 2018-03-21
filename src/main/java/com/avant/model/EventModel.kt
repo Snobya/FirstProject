@@ -3,6 +3,7 @@ package com.avant.model
 import com.avant.entity.Event
 import com.avant.repo.EventRepository
 import com.avant.util.Locks
+import com.avant.util.findOne
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -70,8 +71,13 @@ class EventModel {
 	}
 	
 	fun addEventOffer(eventId: String, dateId: String, name: String, prices: Map<String, Double>) = updateEvent(eventId) {
-		val date = it.dates.stream().filter { it.id == dateId }.findAny().orElseThrow { FileNotFoundException("No such date found") }
+		val date = it.dates.findOne { it.id == dateId } ?: throw FileNotFoundException("No such date found")
 		date.offers.add(Event.EventOffer(name, prices = prices.toMutableMap()))
+	}
+	
+	fun removeEventOffer(eventId: String, dateId: String, name: String) = updateEvent(eventId) {
+		val date = it.dates.findOne { it.id == dateId } ?: throw FileNotFoundException("No such date found")
+		date.offers.removeIf { it.name == name }
 	}
 	
 	fun getEventOffers(eventId: String, dateId: String) = getEvent(eventId).dates.find { it.id == dateId }
@@ -89,13 +95,4 @@ class EventModel {
 	
 	fun getEvent(eventId: String): Event = eventRepo.findById(eventId).orElseThrow { FileNotFoundException("Event doesn't exist") }
 	
-}
-
-private fun <T> Iterable<T>.findOne(function: (T) -> Boolean): T? {
-	for (e in this) {
-		if (function(e)) {
-			return e
-		}
-	}
-	return null
 }
