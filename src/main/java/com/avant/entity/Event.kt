@@ -1,6 +1,7 @@
 package com.avant.entity
 
 import com.avant.model.DefaultData
+import com.avant.util.findOne
 import org.springframework.data.annotation.Id
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -24,6 +25,9 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 		dates.add(date)
 		findClosestDate()
 	}
+	
+	fun getDate(id: String): EventDate = dates.findOne { it.id == id }
+			?: throw IllegalArgumentException("Wrong date id")
 	
 	fun findClosestDate(): LocalDateTime {
 		closestEvent = this.datelist.sorted().first()

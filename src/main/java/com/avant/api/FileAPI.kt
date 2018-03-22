@@ -33,7 +33,7 @@ import javax.annotation.PostConstruct
 
 @RestController
 @CrossOrigin
-@RequestMapping("/file")
+@RequestMapping("/api/file")
 class FileAPI {
 	
 	private val bucketName = "avant-html-1"
