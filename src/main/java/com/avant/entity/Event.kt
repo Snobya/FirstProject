@@ -2,10 +2,12 @@ package com.avant.entity
 
 import com.avant.model.DefaultData
 import com.avant.util.findOne
+import com.avant.util.toMillis
 import org.springframework.data.annotation.Id
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -21,6 +23,7 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 	val datelist: List<LocalDateTime>
 		get() = dates.map { it.startDate }
 	
+	
 	fun addDate(date: EventDate) {
 		dates.add(date)
 		findClosestDate()
@@ -34,10 +37,18 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 		return closestEvent
 	}
 	
+	// frontend:
+	val timeStampList: List<Long>
+		get() = dates.map { it.startDateTimeStamp }
+	
 	class EventDate(var id: String = UUID.randomUUID().toString().substring(0..7),
 	                var startDate: LocalDateTime, var endDate: LocalDateTime) {
 		
 		var offers = ArrayList<EventOffer>()
+		
+		// frontend:
+		val startDateTimeStamp = startDate.toMillis()
+		val endDateTimeStamp = startDate.toMillis()
 		
 	}
 	
@@ -50,3 +61,5 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 	data class EventOffer(var name: String, var prices: MutableMap<String, Double>)
 	
 }
+
+
