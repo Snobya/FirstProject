@@ -1,7 +1,7 @@
 package com.avant.util
 
 import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.ZoneOffset
 import java.util.*
 
 fun String.join(middle: String = "", vararg others: String): String {
@@ -31,4 +31,4 @@ fun <T> Iterable<T>.findOne(function: (T) -> Boolean): T? {
 	return null
 }
 
-fun LocalDateTime.toMillis(): Long = this.atZone(ZoneId.of("Z")).toInstant().toEpochMilli()
+fun LocalDateTime.toMillis(): Long = this.atZone(ZoneOffset.ofTotalSeconds(0)).toInstant().toEpochMilli()
