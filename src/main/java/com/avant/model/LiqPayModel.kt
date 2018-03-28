@@ -1,7 +1,7 @@
 package com.avant.model
 
 import com.avant.entity.Payment
-import com.avant.util.MongoEntityInformationCreator
+import com.avant.repo.MongoEntityInformationCreator
 import org.springframework.stereotype.Service
 import com.liqpay.LiqPay
 import org.springframework.beans.factory.annotation.Autowired
