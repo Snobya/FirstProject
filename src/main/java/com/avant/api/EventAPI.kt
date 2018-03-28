@@ -33,6 +33,14 @@ class EventAPI {
 	}
 	
 	/**
+	 * Get all the events. Warning! This method cause performance issues.
+	 */
+	@GetMapping("/all")
+	fun all(): ResponseEntity<*> {
+		return Ret.ok(eventModel.all())
+	}
+	
+	/**
 	 * Find {count} closest unique events
 	 */
 	@GetMapping("/closest")
