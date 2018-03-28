@@ -39,8 +39,8 @@ class EventAPI {
 	 */
 	@GetMapping("/month")
 	fun monthly(@RequestParam month: String): ResponseEntity<*> {
-		val firstDay = LocalDate.parse(month + "-01")
-		val lastDay = firstDay.withMonth(firstDay.lengthOfMonth())
+		val firstDay = LocalDate.parse("$month-01")
+		val lastDay = firstDay.withDayOfMonth(firstDay.lengthOfMonth())
 		return Ret.ok(eventModel.between(firstDay.atStartOfDay(),
 				lastDay.atTime(23, 59)))
 	}
