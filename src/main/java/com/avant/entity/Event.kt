@@ -50,6 +50,9 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 		val startDateTimeStamp = startDate.toMillis()
 		val endDateTimeStamp = startDate.toMillis()
 		
+		fun getDepositPrice(name: String, type: String): Double =
+			offers.findOne { it.name == name }?.run { this.prices[type] }
+					?: throw IllegalArgumentException("Such request not found")
 	}
 	
 	/**
@@ -58,7 +61,7 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 	 * price map is: student - 2500, teacher - 3500
 	 * prices contains all the prices in map: key-value
 	 */
-	data class EventOffer(var name: String, var prices: MutableMap<String, Double>)
+	data class EventOffer(var currency: String = "UAH", var name: String, var prices: MutableMap<String, Double>)
 	
 }
 

@@ -1,7 +1,7 @@
 package com.avant.model
 
 import com.avant.entity.Event
-import com.avant.repo.EventRepository
+import com.avant.repo.EventRepo
 import com.avant.util.Locks
 import com.avant.util.findOne
 import org.springframework.beans.factory.annotation.Autowired
@@ -9,14 +9,13 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import java.io.FileNotFoundException
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Service
 class EventModel {
 	
 	@Autowired
-	private lateinit var eventRepo: EventRepository
+	private lateinit var eventRepo: EventRepo
 	
 	fun ping() = "ping"
 	
@@ -70,9 +69,9 @@ class EventModel {
 		it.findClosestDate()
 	}
 	
-	fun addEventOffer(eventId: String, dateId: String, name: String, prices: Map<String, Double>) = updateEvent(eventId) {
+	fun addEventOffer(eventId: String, dateId: String, name: String, prices: Map<String, Double>, currency: String?) = updateEvent(eventId) {
 		val date = it.dates.findOne { it.id == dateId } ?: throw FileNotFoundException("No such date found")
-		date.offers.add(Event.EventOffer(name, prices = prices.toMutableMap()))
+		date.offers.add(Event.EventOffer(name = name, prices = prices.toMutableMap(), currency = currency ?: "UAH"))
 	}
 	
 	fun removeEventOffer(eventId: String, dateId: String, name: String) = updateEvent(eventId) {

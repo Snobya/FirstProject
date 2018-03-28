@@ -1,7 +1,7 @@
 package com.avant.model
 
 import com.avant.entity.Event
-import com.avant.repo.EventRepository
+import com.avant.repo.EventRepo
 import com.avant.util.isAnyOf
 import com.avant.util.print
 import org.junit.jupiter.api.*
@@ -22,7 +22,7 @@ internal class EventModelTest {
 	@Autowired
 	private lateinit var eventModel: EventModel
 	@Autowired
-	private lateinit var eventRepo: EventRepository
+	private lateinit var eventRepo: EventRepo
 	
 	private val testId = "test-event-id"
 	
@@ -108,9 +108,9 @@ internal class EventModelTest {
 	@Test
 	fun addEventOffer() {
 		val date = eventModel.getEvent(testId).dates[0]
-		eventModel.addEventOffer(testId, date.id, "Deluxe", mapOf("Студент" to 5500.0, "Обычный" to 8000.0))
-		eventModel.addEventOffer(testId, date.id, "Semi-Luxe", mapOf("Студент" to 3500.0, "Обычный" to 6000.0))
-		eventModel.addEventOffer(testId, date.id, "Economy", mapOf("Студент" to 2200.0, "Обычный" to 3000.0))
+		eventModel.addEventOffer(testId, date.id, "Deluxe", mapOf("Студент" to 5500.0, "Обычный" to 8000.0), currency)
+		eventModel.addEventOffer(testId, date.id, "Semi-Luxe", mapOf("Студент" to 3500.0, "Обычный" to 6000.0), currency)
+		eventModel.addEventOffer(testId, date.id, "Economy", mapOf("Студент" to 2200.0, "Обычный" to 3000.0), currency)
 		assertEquals(eventModel.getEventOffers(testId, date.id).offers.size, date.offers.size + 3)
 		for (offer in eventModel.getEventOffers(testId, date.id).offers) {
 			assertEquals(offer.prices.size, 2)

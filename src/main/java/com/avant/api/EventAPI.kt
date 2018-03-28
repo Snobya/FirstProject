@@ -1,7 +1,7 @@
 package com.avant.api
 
 import com.avant.model.EventModel
-import com.avant.repo.EventRepository
+import com.avant.repo.EventRepo
 import com.avant.util.Ret
 import com.avant.util.isAnyOf
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletRequest
 class EventAPI {
 	
 	@Autowired
-	private lateinit var eventRepo: EventRepository
+	private lateinit var eventRepo: EventRepo
 	@Autowired
 	private lateinit var eventModel: EventModel
 	
@@ -154,12 +154,14 @@ class EventAPI {
 	/**
 	 * Adds offers to event. If offer with exact name already exists - overwrites data.
 	 * @param offerName is name of offer, like "2-people room", "econom", "all-inclusive" etc.
+	 * @param currency is optional: currency of event. default is UAH.
 	 * @param request request can contain params, each of may represent variant of price and it's price as a value:
 	 * Student - 2500
 	 * Normal - 999.99
 	 */
 	@PostMapping("/offer/set")
 	fun offerSet(@RequestParam id: String, @RequestParam dateId: String, @RequestParam offerName: String,
+	             @RequestParam(defaultValue = "UAH") currency: String? = null,
 	             request: HttpServletRequest): ResponseEntity<*> {
 		val map = mutableMapOf<String, Double>()
 		request.parameterMap.forEach { param, value ->
@@ -167,7 +169,7 @@ class EventAPI {
 				map[param] = value[0].toDouble()
 			}
 		}
-		return Ret.ok(eventModel.addEventOffer(id, dateId, offerName, map))
+		return Ret.ok(eventModel.addEventOffer(id, dateId, offerName, map, currency))
 	}
 	
 	/**

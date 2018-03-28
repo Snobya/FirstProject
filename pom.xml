@@ -96,6 +96,13 @@
 			<version>2.9.4</version>
 		</dependency>
 
+		<!-- payment -->
+		<dependency>
+			<groupId>com.liqpay</groupId>
+			<artifactId>liqpay-sdk</artifactId>
+			<version>0.6</version>
+		</dependency>
+
 		<!-- others -->
 		<dependency>
 			<groupId>com.google.code.findbugs</groupId>
