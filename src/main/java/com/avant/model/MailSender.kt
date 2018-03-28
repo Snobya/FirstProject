@@ -10,4 +10,8 @@ class MailSender {
 	
 	}
 	
+	fun sendDepositEmail(order: Order, cash: Double) {
+		TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+	}
+	
 }

@@ -2,6 +2,7 @@ package com.avant.model
 
 import com.avant.entity.Event
 import com.avant.entity.Order
+import com.avant.entity.Payment
 import com.avant.entity.Person
 import com.avant.repo.OrderRepo
 import com.avant.util.Locks
@@ -70,6 +71,19 @@ class OrderModel {
 		val html = liqPayModel.getAPI().cnb_form(params)
 		
 		return listOf("form" to html, "orderId" to orderId)
+	}
+	
+	fun depositOrder(payment: Payment) = depositOrder(payment.orderId, payment.cash)
+	
+	fun depositOrder(id: String, cash: Double) = updateOrder(id) {
+		it.orderDeposit += cash
+		
+		launch {
+			mailSender.sendDepositEmail(it, cash)
+		}
+		launch {
+			// TODO GSheets write
+		}
 	}
 	
 	private fun updateOrder(orderId: String, function: (Order) -> Unit): Order {

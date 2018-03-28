@@ -1,19 +1,14 @@
 package com.avant.api
 
-import com.avant.entity.Order
 import com.avant.entity.Person
+import com.avant.model.LiqPayModel
 import com.avant.model.OrderModel
 import com.avant.repo.EventRepo
 import com.avant.util.Ret
-import kotlinx.coroutines.experimental.launch
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.io.IOException
 import java.time.LocalDate
-import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.stream.Stream
 import javax.servlet.http.HttpServletRequest
 
 @RestController
@@ -24,6 +19,8 @@ class OrderAPI {
 	private lateinit var eventRepo: EventRepo
 	@Autowired
 	private lateinit var orderModel: OrderModel
+	@Autowired
+	private lateinit var liqPayModel: LiqPayModel
 	
 	@PostMapping("/create")
 	fun create(req: HttpServletRequest,
@@ -74,33 +71,12 @@ class OrderAPI {
 	                   @RequestParam(required = false) sandbox: Boolean?): ResponseEntity<*> {
 		return Ret.ok(orderModel.requestOrderPayment(orderId, cash, sandbox))
 	}
-	//
-	//	@RequestMapping("/process")
-	//	@Throws(IOException::class)
-	//	fun success(req: HttpServletRequest): ResponseEntity<*> {
-	//		//TODO: analyze if success or fail
-	//		//TODO: check tokens
-	//		println("Payment-page")
-	//		req.parameterMap.forEach { k, v -> println(" -- " + k + " : " + Arrays.toString(v) + " --- ") }
-	//		val resp = String(Base64.getDecoder().decode(req.getParameter("data")), "UTF-8")
-	//		println(resp)
-	//		val payment = Payment(resp)
-	//		payRepo.save(payment)
-	//		TelegramBotMethods.sendMessage("34080460", resp)
-	//		val order = orderRepo.findOne(payment.getOrderId())
-	//		System.out.println("order id : " + payment.getOrderId())
-	//		order.addDeposit(payment.getCash() as Int)
-	//		async {
-	//			MailSender.sendMail(
-	//					"Клуб Авантюристов: оплата заказа номер " + order.id,
-	//					getPaidThanks(order, payment.getCash(), payment.getCurrency()),
-	//					order.mail
-	//			)
-	//		}
-	//		async { sheetsAPI.writeOrderToTable(order) }
-	//		orderRepo.save(order)
-	//		return ResponseEntity.ok("Done")
-	//	}
+	
+	@RequestMapping("/process")
+	fun success(req: HttpServletRequest): ResponseEntity<*> {
+		liqPayModel.processRequest(req)
+		return Ret.ok("Done successfully")
+	}
 	//
 	//	@GetMapping("/payments")
 	//	fun all(@RequestParam(value = "limit", required = false) limit: Int?,
