@@ -52,9 +52,7 @@ class FileAPI {
 	@PostConstruct
 	fun postConstruct() {
 		launch {
-			s3Client = AmazonS3Client.builder().withCredentials(
-					ProfileCredentialsProvider(environment.getProperty("amazon.s3.key"), environment.getProperty("amazon.s3.secret"))
-			).build()
+			s3Client = AmazonS3Client(BasicAWSCredentials(environment.getProperty("amazon.s3.key"), environment.getProperty("amazon.s3.secret")))
 		}
 		
 		val parent = File(filePlace)
