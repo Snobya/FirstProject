@@ -24,6 +24,8 @@ class EventModel {
 	fun between(firstDay: LocalDateTime, lastDay: LocalDateTime): List<Event> =
 		eventRepo.findByClosestEventBetween(firstDay, lastDay)
 	
+	fun list(page: Int, pageSize: Int) = eventRepo.findAll(PageRequest.of(page, pageSize))
+	
 	fun create(title: String, info: String, image: String) =
 		eventRepo.save(Event(title = title).apply {
 			this.info = info

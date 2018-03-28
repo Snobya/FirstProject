@@ -24,6 +24,15 @@ class EventAPI {
 	private lateinit var eventModel: EventModel
 	
 	/**
+	 * Get all the events by pages.
+	 * @param pageSize is optional. default is 20.
+	 */
+	@GetMapping("/list")
+	fun list(@RequestParam page: Int, @RequestParam(required = false) pageSize: Int? = null): ResponseEntity<*> {
+		return Ret.ok(eventModel.list(page, pageSize ?: 20))
+	}
+	
+	/**
 	 * Find {count} closest unique events
 	 */
 	@GetMapping("/closest")
