@@ -265,6 +265,11 @@
 			<id>central</id>
 			<url>http://jcenter.bintray.com</url>
 		</repository>
+		<repository> <!-- Liq Pay repo -->
+			<id>bintray-stokito-maven</id>
+			<name>stokito-maven</name>
+			<url>https://api.bintray.com/maven/stokito/maven/liqpay-sdk</url>
+		</repository>
 		<repository>
 			<id>spring-releases</id>
 			<url>https://repo.spring.io/libs-release</url>

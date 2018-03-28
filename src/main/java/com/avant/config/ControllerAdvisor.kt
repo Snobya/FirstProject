@@ -35,7 +35,7 @@ class ControllerAdvisor : ResponseBodyAdvice<Any> {
 	fun handle(ex: Exception, request: HttpServletRequest): ResponseEntity<*> {
 		if (request.requestURL.toString().contains("localhost")) {
 			ex.printStackTrace()
-			return Ret.code(800, "Exception")
+			return Ret.error(800, "Exception")
 		}
 		val sb = StringBuilder()
 			.append(request.remoteAddr)
@@ -67,13 +67,13 @@ class ControllerAdvisor : ResponseBodyAdvice<Any> {
 		println(sb)
 		
 		return when (ex.javaClass.name) {
-			"NullPointerException"     -> Ret.code(503, sb)
-			"IllegalArgumentException" -> Ret.code(406, sb)
+			"NullPointerException"     -> Ret.error(503, sb)
+			"IllegalArgumentException" -> Ret.error(406, sb)
 			"MissingServletRequestParameterException",
 			"HttpRequestMethodNotSupportedException",
 			"FileNotFoundException",
-			"IOException"              -> Ret.code(404, sb)
-			else                       -> Ret.code(503, sb)
+			"IOException"              -> Ret.error(404, sb)
+			else                       -> Ret.error(503, sb)
 		}
 	}
 	
