@@ -1,4 +1,4 @@
-package com.avant.util
+package com.avant.repo
 
 import com.avant.entity.Saveable
 import org.springframework.beans.factory.annotation.Autowired
