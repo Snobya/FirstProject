@@ -1,8 +1,10 @@
 package com.avant.api
 
+import com.avant.model.ConfigService
 import com.nikichxp.util.Async
 import com.nikichxp.util.JsonUtil
 import com.nikichxp.util.Ret
+import kotlinx.coroutines.experimental.launch
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.http.HttpEntity
@@ -23,12 +25,13 @@ import javax.servlet.http.HttpServletResponse
 
 @RestController
 @RequestMapping("/api/google/auth")
-class GAuthAPI @Autowired
-constructor(context: ApplicationContext) {
+class GAuthAPI(
+		context: ApplicationContext,
+		val configService: ConfigService) {
 	private val redirect_uri = "https://avant-2.herokuapp.com/api/google/auth/proceed"
 	private var client_id: String? = null
 	private var client_secret: String? = null
-	private var refresh_token: String? = null
+	private var refresh_token: String = configService.getParam("google.auth", "refresh-token", "null")
 	private var access_token: String? = null
 	
 	val accessToken: String?
@@ -56,7 +59,7 @@ constructor(context: ApplicationContext) {
 				println("Cannot update token. Need re-auth.")
 			}
 			
-			println("GSheets service started, " + (this.refresh_token != null) + " & " + (this.access_token != null))
+			println("GSheets service started, " + (this.refresh_token != "null") + " & " + (this.access_token != null))
 		}
 	}
 	
@@ -94,34 +97,36 @@ constructor(context: ApplicationContext) {
 		val request = HttpEntity(map, headers)
 		val response = restTemplate.postForEntity("https://www.googleapis.com/oauth2/v4/token", request, String::class.java, *arrayOfNulls(0))
 		println(response.body)
-		if (response.statusCodeValue == 200) {
-			this.refresh_token = JsonUtil.of(response.body!!).getX("refresh_token")
-		}
 		
-		if (this.refresh_token != null) {
-			Async.async { this.updateAccessToken() }
+		return try {
+			if (response.statusCodeValue == 200) {
+				this.refresh_token = JsonUtil.of(response.body!!).getX("refresh_token")
+			}
+			
+			configService.addParam("google.auth", "refresh-token", this.refresh_token)
+			
+			launch { updateAccessToken() }
+			
+			Ret.ok(response.body!!)
+		} catch (e: Exception) {
+			Ret.code(503, "Something went wrong!")
 		}
-		
-		return ResponseEntity.ok<Any>(response.body!!)
 	}
 	
 	@Scheduled(cron = "0 0 * * * *")
 	private fun updateAccessToken() {
-		if (this.refresh_token != null) {
-			val headers = HttpHeaders()
-			headers.contentType = MediaType.APPLICATION_FORM_URLENCODED
-			val map = LinkedMultiValueMap<String, String>()
-			map.add("refresh_token", this.refresh_token)
-			map.add("client_id", this.client_id)
-			map.add("client_secret", this.client_secret)
-			map.add("grant_type", "refresh_token")
-			val request = HttpEntity(map, headers)
-			val response = restTemplate.postForEntity("https://www.googleapis.com/oauth2/v4/token", request, String::class.java, *arrayOfNulls(0))
-			this.access_token = JsonUtil.of(response.body!!).getX("access_token")
-			if (this.access_token != null) {
-				println("Access token granted successfully")
-			}
-			
+		val headers = HttpHeaders()
+		headers.contentType = MediaType.APPLICATION_FORM_URLENCODED
+		val map = LinkedMultiValueMap<String, String>()
+		map.add("refresh_token", this.refresh_token)
+		map.add("client_id", this.client_id)
+		map.add("client_secret", this.client_secret)
+		map.add("grant_type", "refresh_token")
+		val request = HttpEntity(map, headers)
+		val response = restTemplate.postForEntity("https://www.googleapis.com/oauth2/v4/token", request, String::class.java, *arrayOfNulls(0))
+		this.access_token = JsonUtil.of(response.body!!).getX("access_token")
+		if (this.access_token != null) {
+			println("Access token granted successfully")
 		}
 	}
 	
