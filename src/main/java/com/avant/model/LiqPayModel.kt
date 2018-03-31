@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletRequest
 @Service
 class LiqPayModel
 @Autowired constructor(mongoEntityInformationCreator: MongoEntityInformationCreator,
-                       val orderModel: OrderModel,
+                       @Lazy val orderModel: OrderModel,
                        val sheetsModel: GSheetsModel,
                        val mailSender: MailSender) {
 	
