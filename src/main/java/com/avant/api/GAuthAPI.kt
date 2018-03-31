@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.ResponseErrorHandler
 import org.springframework.web.client.RestTemplate
 import java.io.IOException
+import javax.servlet.http.HttpServletResponse
 
 @RestController
 @RequestMapping("/api/google/auth")
@@ -57,6 +58,18 @@ constructor(context: ApplicationContext) {
 			
 			println("GSheets service started, " + (this.refresh_token != null) + " & " + (this.access_token != null))
 		}
+	}
+	
+	@GetMapping
+	fun auth(@RequestParam(value = "redirect", required = false) redirect: Boolean?,
+	         resp: HttpServletResponse) {
+		val request = "https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=$redirect_uri" +
+				"&response_type=$RESPONSE_TYPE&client_id=$client_id" +
+				"&scope=$SCOPE&access_type=$ACCESS_TYPE&prompt=$PROMPT"
+		if (redirect != null && redirect) {
+			resp.sendRedirect(request)
+		}
+		resp.writer.write(request)
 	}
 	
 	@GetMapping("/status")
