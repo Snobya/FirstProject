@@ -32,3 +32,8 @@ fun <T> Iterable<T>.findOne(function: (T) -> Boolean): T? {
 }
 
 fun LocalDateTime.toMillis(): Long = this.atZone(ZoneOffset.ofTotalSeconds(0)).toInstant().toEpochMilli()
+
+fun ignoreErrors(function: () -> Unit) = try {
+	function()
+} catch (e: Exception) {
+}

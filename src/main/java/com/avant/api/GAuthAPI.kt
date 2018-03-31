@@ -1,10 +1,12 @@
 package com.avant.api
 
 import com.avant.model.ConfigService
+import com.avant.util.ignoreErrors
 import com.nikichxp.util.Async
 import com.nikichxp.util.JsonUtil
 import com.nikichxp.util.Ret
 import kotlinx.coroutines.experimental.launch
+import org.jboss.logging.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.http.HttpEntity
@@ -124,9 +126,13 @@ class GAuthAPI(
 		map.add("grant_type", "refresh_token")
 		val request = HttpEntity(map, headers)
 		val response = restTemplate.postForEntity("https://www.googleapis.com/oauth2/v4/token", request, String::class.java, *arrayOfNulls(0))
-		this.access_token = JsonUtil.of(response.body!!).getX("access_token")
-		if (this.access_token != null) {
-			println("Access token granted successfully")
+		try {
+			this.access_token = JsonUtil.of(response.body!!).getX("access_token")
+			if (this.access_token != null) {
+				println("Access token granted successfully")
+			}
+		} catch (e: Exception) {
+			Logger.getLogger(this::class.java).warn("Update access token failed.")
 		}
 	}
 	
