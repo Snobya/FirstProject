@@ -16,12 +16,9 @@ import javax.servlet.http.HttpServletRequest
  */
 @RestController
 @RequestMapping("/api/event")
-class EventAPI {
-	
-	@Autowired
-	private lateinit var eventRepo: EventRepo
-	@Autowired
-	private lateinit var eventModel: EventModel
+class EventAPI(
+		val eventRepo: EventRepo,
+		val eventModel: EventModel) {
 	
 	/**
 	 * Get all the events by pages.
@@ -195,6 +192,15 @@ class EventAPI {
 	@PostMapping("/offers/delete")
 	fun todoOffers(@RequestParam id: String, @RequestParam dateId: String, @RequestParam offerName: String): ResponseEntity<*> {
 		return Ret.ok(eventModel.removeEventOffer(id, dateId, offerName))
+	}
+	
+	/**
+	 * Sets whether event has free seats in specific date offering or not.
+	 */
+	@PostMapping("/offer/free")
+	fun setHasFreeSeatsInOffer(@RequestParam id: String, @RequestParam dateId: String,
+	                           @RequestParam hasFree: Boolean): ResponseEntity<*> {
+		return Ret.ok(eventModel.setFreeSeats(id, dateId, hasFree))
 	}
 	
 	//	@GetMapping("/rank")

@@ -21,6 +21,12 @@
 
 	<dependencies>
 
+		<dependency>
+			<groupId>com.github.NikichXP</groupId>
+			<artifactId>LibPack</artifactId>
+			<version>4247a9c0df</version>
+		</dependency>
+
 		<!-- db -->
 		<dependency>
 			<groupId>org.mongodb</groupId>
@@ -94,6 +100,11 @@
 			<groupId>com.fasterxml.jackson.module</groupId>
 			<artifactId>jackson-module-kotlin</artifactId>
 			<version>2.9.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>21.0</version>
 		</dependency>
 
 		<!-- payment -->

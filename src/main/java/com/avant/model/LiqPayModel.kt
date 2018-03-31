@@ -16,15 +16,10 @@ import javax.servlet.http.HttpServletRequest
 
 @Service
 class LiqPayModel
-@Autowired constructor(mongoEntityInformationCreator: MongoEntityInformationCreator) {
-	
-	@Autowired
-	@Lazy
-	private lateinit var orderModel: OrderModel
-	@Autowired
-	private lateinit var sheetsModel: GSheetsModel
-	@Autowired
-	private lateinit var mailSender: MailSender
+@Autowired constructor(mongoEntityInformationCreator: MongoEntityInformationCreator,
+                       val orderModel: OrderModel,
+                       val sheetsModel: GSheetsModel,
+                       val mailSender: MailSender) {
 	
 	private val repo = mongoEntityInformationCreator.getSimpleMongoRepository(Payment::class.java)
 	private val logger = Logger.getLogger("LiqPayModel")

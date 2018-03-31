@@ -12,6 +12,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.util.*
 import javax.servlet.http.HttpServletRequest
@@ -66,14 +67,15 @@ class ControllerAdvisor : ResponseBodyAdvice<Any> {
 		
 		println(sb)
 		
-		return when (ex.javaClass.name) {
-			"NullPointerException"     -> Ret.error(503, sb)
-			"IllegalArgumentException" -> Ret.error(406, sb)
-			"MissingServletRequestParameterException",
-			"HttpRequestMethodNotSupportedException",
-			"FileNotFoundException",
-			"IOException"              -> Ret.error(404, sb)
-			else                       -> Ret.error(503, sb)
+		return when (ex) {
+			is NullPointerException     -> Ret.error(503, sb)
+			is IllegalArgumentException -> Ret.error(406, sb)
+			is MissingServletRequestParameterException,
+			is HttpRequestMethodNotSupportedException,
+			is FileNotFoundException,
+			is IOException              -> Ret.error(404, sb)
+			is IllegalAccessError       -> Ret.error(403, sb)
+			else                        -> Ret.error(503, sb)
 		}
 	}
 	

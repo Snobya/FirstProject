@@ -1,27 +1,15 @@
 package com.avant.auth
 
+import com.avant.entity.Saveable
+import com.avant.util.IDGenerator
 import org.springframework.data.annotation.Id
 
-import java.util.UUID
-
-class User(private val mail: String, private var pass: String) : Cloneable {
+class User(private val mail: String) : Saveable {
+	
 	@Id
-	private val id: String = UUID.randomUUID().toString()
-	private val name: String? = null
-	private val photo: String? = null
-	private val phone: String? = null
-	
-	fun wipePrivateData(): User? {
-		try {
-			val clone = this.clone() as User
-			clone.pass = ""
-			return clone
-		} catch (e: CloneNotSupportedException) {
-			e.printStackTrace()
-		}
-		
-		return null
-	}
-	
+	override var id: String = IDGenerator.longId()
+	var name: String? = null
+	var photo: String? = null
+	var phone: String? = null
 	
 }

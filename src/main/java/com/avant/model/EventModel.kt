@@ -4,7 +4,6 @@ import com.avant.entity.Event
 import com.avant.repo.EventRepo
 import com.avant.util.Locks
 import com.avant.util.findOne
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
@@ -12,10 +11,8 @@ import java.io.FileNotFoundException
 import java.time.LocalDateTime
 
 @Service
-class EventModel {
-	
-	@Autowired
-	private lateinit var eventRepo: EventRepo
+class EventModel(
+		val eventRepo: EventRepo) {
 	
 	fun ping() = "ping"
 	
@@ -85,6 +82,10 @@ class EventModel {
 	
 	fun getEventOffers(eventId: String, dateId: String) = getEvent(eventId).dates.find { it.id == dateId }
 			?: throw FileNotFoundException("No such date id")
+	
+	fun setFreeSeats(eventId: String, dateId: String, hasFreePlaces: Boolean) = updateEvent(eventId) {
+		it.getDate(dateId).hasFreePlaces = hasFreePlaces
+	}
 	
 	private fun updateEvent(eventId: String, function: (Event) -> Unit): Event {
 		var event: Event? = null

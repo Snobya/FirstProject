@@ -45,6 +45,7 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 	                var startDate: LocalDateTime, var endDate: LocalDateTime) {
 		
 		var offers = ArrayList<EventOffer>()
+		var hasFreePlaces = false
 		
 		// frontend:
 		val startDateTimeStamp = startDate.toMillis()
