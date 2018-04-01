@@ -39,14 +39,8 @@ class GAuthAPI(
 	val accessToken: String?
 		get() {
 			if (this.access_token == null) {
-				try {
-					this.updateAccessToken()
-				} catch (var2: Exception) {
-					var2.printStackTrace()
-				}
-				
+				this.updateAccessToken()
 			}
-			
 			return this.access_token
 		}
 	
@@ -71,7 +65,7 @@ class GAuthAPI(
 		val request = "https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=$redirect_uri" +
 				"&response_type=$RESPONSE_TYPE&client_id=$client_id" +
 				"&scope=$SCOPE&access_type=$ACCESS_TYPE&prompt=$PROMPT"
-		if (redirect != null && redirect) {
+		if (redirect == true) {
 			resp.sendRedirect(request)
 		}
 		resp.writer.write(request)
@@ -80,9 +74,9 @@ class GAuthAPI(
 	@GetMapping("/status")
 	fun status(): ResponseEntity<*> {
 		return when {
-			this.access_token == null  -> Ret.code(401, "Failure")
-			this.refresh_token == null -> Ret.code(401, "refresh failure")
-			else                       -> Ret.ok("OK")
+			this.access_token == null    -> Ret.code(401, "Failure")
+			this.refresh_token == "null" -> Ret.code(401, "refresh failure")
+			else                         -> Ret.ok("OK")
 		}
 	}
 	
@@ -147,14 +141,8 @@ class GAuthAPI(
 		
 		init {
 			restTemplate.errorHandler = object : ResponseErrorHandler {
-				@Throws(IOException::class)
-				override fun hasError(clientHttpResponse: ClientHttpResponse): Boolean {
-					return false
-				}
-				
-				@Throws(IOException::class)
-				override fun handleError(clientHttpResponse: ClientHttpResponse) {
-				}
+				override fun hasError(clientHttpResponse: ClientHttpResponse) = false
+				override fun handleError(clientHttpResponse: ClientHttpResponse) {}
 			}
 		}
 	}

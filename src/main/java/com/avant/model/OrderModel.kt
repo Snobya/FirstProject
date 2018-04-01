@@ -7,21 +7,15 @@ import com.avant.entity.Person
 import com.avant.repo.OrderRepo
 import com.avant.util.Locks
 import kotlinx.coroutines.experimental.launch
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.FileNotFoundException
 
 @Service
-class OrderModel {
-	
-	@Autowired
-	private lateinit var orderRepo: OrderRepo
-	@Autowired
-	private lateinit var eventModel: EventModel
-	@Autowired
-	private lateinit var mailSender: MailSender
-	@Autowired
-	private lateinit var liqPayModel: LiqPayModel
+class OrderModel(
+		val orderRepo: OrderRepo,
+		val eventModel: EventModel,
+		val mailSender: MailSender,
+		val liqPayModel: LiqPayModel) {
 	
 	fun createOrder(eventId: String, dateId: String, mail: String?, comment: String?): Order {
 		val event: Event = eventModel.getEvent(eventId)

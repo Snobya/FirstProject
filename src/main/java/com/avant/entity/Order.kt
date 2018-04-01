@@ -17,6 +17,7 @@ class Order(@Id var id: String = UUID.randomUUID().toString(), var event: Event,
 	fun addPerson(person: Person) = this.persons + person
 	
 	fun getDepositPrice(): Double = persons.map { dateInfo.getDepositPrice(it.offerName, it.offerType) }.sum()
+	fun getFullPrice(): Double = persons.map { dateInfo.getFullPrice(it.offerName, it.offerType) }.sum()
 	
 	
 }

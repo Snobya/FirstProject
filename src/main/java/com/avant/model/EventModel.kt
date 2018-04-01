@@ -70,9 +70,11 @@ class EventModel(
 		it.findClosestDate()
 	}
 	
-	fun addEventOffer(eventId: String, dateId: String, name: String, prices: Map<String, Double>, currency: String?) = updateEvent(eventId) {
+	fun addEventOffer(eventId: String, dateId: String, name: String, deposits: Map<String, Double>,
+	                  prices: Map<String, Double>, currency: String?) = updateEvent(eventId) {
 		val date = it.dates.findOne { it.id == dateId } ?: throw FileNotFoundException("No such date found")
-		date.offers.add(Event.EventOffer(name = name, prices = prices.toMutableMap(), currency = currency ?: "UAH"))
+		date.offers.add(Event.EventOffer(name = name, deposits = deposits.toMutableMap(), prices = prices.toMutableMap(),
+				currency = currency ?: "UAH"))
 	}
 	
 	fun removeEventOffer(eventId: String, dateId: String, name: String) = updateEvent(eventId) {

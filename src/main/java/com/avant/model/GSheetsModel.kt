@@ -1,12 +1,14 @@
 package com.avant.model
 
 import com.avant.api.GAuthAPI
+import com.avant.entity.Event
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.nikichxp.util.Json
 import com.nikichxp.util.JsonUtil
+import com.nikichxp.util.TelegramBotMethods
 import org.apache.http.impl.client.HttpClients
-import org.springframework.beans.factory.annotation.Autowired
+import org.jboss.logging.Logger
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -16,30 +18,73 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.ResponseErrorHandler
 import org.springframework.web.client.RestTemplate
 import java.nio.charset.Charset
+import java.time.format.DateTimeFormatter
 import java.util.*
-import javax.annotation.PostConstruct
+import java.util.stream.Collectors
 
 @Service
-class GSheetsModel {
+class GSheetsModel(
+		val configService: ConfigService,
+		var gAuthAPI: GAuthAPI) {
 	
-	@Autowired
-	private lateinit var configService: ConfigService
-	@Autowired
-	private lateinit var gAuthAPI: GAuthAPI
+	val logger = Logger.getLogger(this::class.java)
+	val sheetsIds = configService.getConfig("sheets.id")
 	
-	val sheetId = Optional.ofNullable(System.getenv("google_sheets_main-sheet-id")).orElse("1H_LgnsVg_3WxD9nXE76KzGNEl40gA5OUlwXmOCmp-e8")
-	
-	@PostConstruct
-	fun checkToken() {
-		val responseCode = restTemplate
-			.getForEntity("https://sheets.googleapis.com/v4/spreadsheets/" + sheetId + "/values/Requests!A1:A10000"
-					+ "?majorDimension=COLUMNS&access_token="
-					+ gAuthAPI.accessToken, String::class.java).statusCodeValue
-		if (responseCode != 200) {
-//			Ctx.AUTHORS_TELEGRAMS.forEach {
-//				Method.sendMessage(it, "Response for testing Google Sheets: $responseCode")
-//			}
+	@Synchronized
+	fun createEventTable(event: Event): String? {
+		val headers = HttpHeaders()
+		headers.set("charset", "UTF-8")
+		headers.contentType = MediaType.APPLICATION_JSON
+		
+		val arr = event.dates.stream()
+			.map { date -> Json.of("properties", Json.of("title", date.startDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))).json() }
+			.collect(Collectors.toList<Any>())
+		
+		val entity = HttpEntity(
+				Json.of(
+						"properties", Json
+					.of("title", event.title))
+					.and("sheets", arr)
+					.toString().toByteArray(), headers)
+		
+		val response = restTemplate.postForEntity(
+				"https://sheets.googleapis.com/v4/spreadsheets?access_token=" + gAuthAPI.accessToken!!, entity, String::class.java)
+		
+		if (debug) {
+			logger.info(response)
+			TelegramBotMethods.sendMessage("34080460", response.toString())
 		}
+		
+		if (response.statusCodeValue != 200) {
+			logger.warn("Warning, response is not 200")
+			return null
+		}
+		
+		val spreadsheetId = JsonUtil.of(response.body!!).getX("spreadsheetId")
+		
+		sheetsIds.params[event.id] = spreadsheetId
+		sheetsIds.save()
+		
+		return spreadsheetId
+	}
+	
+	@Synchronized
+	fun updatePages(event: Event) {
+		val response = restTemplate
+			.getForEntity("https://sheets.googleapis.com/v4/spreadsheets/${sheetsIds.params[event.id]}", String::class.java)
+		if (response.statusCodeValue == 404) {
+			createEventTable(event)
+			return
+		}
+		val eventDates = event.dates.map { it.startDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) }.toMutableSet()
+		JsonParser().parse(response.body).asJsonObject.getAsJsonArray("sheets").forEach { sheet ->
+			val name = sheet.asJsonObject.getAsJsonObject("properties").get("title").asString
+			eventDates.remove(name)
+		}
+		for (date in eventDates) {
+			createPage(sheetsIds.params[event.id]!!, date)
+		}
+		return
 	}
 	
 	@Synchronized
@@ -52,22 +97,18 @@ class GSheetsModel {
 		
 		val entity = HttpEntity(requestJson.toByteArray(), headers)
 		
-		println(gAuthAPI.accessToken)
-		
 		val response = restTemplate.postForEntity(
 				"https://sheets.googleapis.com/v4/spreadsheets/" + sheetId + ":batchUpdate" +
 						"?access_token=" + gAuthAPI.accessToken,
 				entity,
 				String::class.java)
 		
-		println(gAuthAPI.accessToken)
-		
 		if (debug) {
-			println(response)
+			logger.info(response)
 		}
 		
 		if (response.statusCodeValue == 200) {
-			writeToTable(sheetId, title, 1, arrayOf("ID заказа", "ФИО", "Телефон", "Тип", "Размещение", "Аванс",
+			writeArrayToTable(sheetId, title, 1, arrayOf("ID заказа", "ФИО", "Телефон", "Тип", "Размещение", "Аванс",
 					"Полная цена", "Коммент"))
 		}
 		
@@ -100,15 +141,17 @@ class GSheetsModel {
 	 * @param row     a row of writing - 1,2,3... to write on A1..E1, A2..E2 etc. Use -1 to get first free line
 	 * @param data    all the rows
 	 */
-	fun writeToTable(sheetId: String, page: String, row: Int, data: Array<String>) {
-		val rowX = if (row < 0) getFirstFreeLine(if (sheetId == "default") this.sheetId else sheetId, page) else row
-		writeToTable(if (sheetId == "default") this.sheetId else sheetId,
-				page + "!" + ROWSTART + rowX + ":" + (ROWSTART.toInt() + data.size - 1).toChar() + rowX,
+	fun writeArrayToTable(sheetId: String, page: String, row: Int, data: Array<String>) {
+		val rowX = if (row < 0) getFirstFreeLine(if (sheetId == "default") sheetId else sheetId, page) else row
+		writeToTable(sheetId, page + "!" + ROWSTART + rowX + ":" + (ROWSTART.toInt() + data.size - 1).toChar() + rowX,
 				arrayOf(data))
 	}
 	
+	fun autoWriteToTable(sheetId: String, page: String, vararg data: String) =
+		writeArrayToTable(sheetId, page, -1, data as Array<String>)
+	
 	@Synchronized
-	fun writeToTable(id: String, range: String, data: Array<Array<String>>, retry: Boolean = false) {
+	fun writeToTable(sheetId: String, range: String, data: Array<Array<String>>, retry: Boolean = false) {
 		val arrays = arrayOfNulls<Json.JsonArr>(data.size)
 		for (i in arrays.indices) {
 			arrays[i] = Json.JsonArr(data[i])
@@ -129,7 +172,7 @@ class GSheetsModel {
 		val entity = HttpEntity(gson.toJson(map).toByteArray(Charset.forName("UTF-8")), headers)
 		
 		val response = restTemplate.postForEntity(
-				"https://sheets.googleapis.com/v4/spreadsheets/$id/values:batchUpdate" +
+				"https://sheets.googleapis.com/v4/spreadsheets/$sheetId/values:batchUpdate" +
 						"?access_token=${gAuthAPI.accessToken}",
 				entity,
 				String::class.java)
@@ -138,34 +181,31 @@ class GSheetsModel {
 			if (retry) {
 				throw IllegalArgumentException()
 			}
-			println("WARNING! Error writing to sheet " + id + " data: " + Arrays.toString(data))
-			println(response)
+			logger.warn("WARNING! Error writing to sheet " + sheetId + " data: " + Arrays.toString(data))
+			logger.warn(response)
 			try {
 				createPage(sheetId, range.split(Regex("!"))[0])
-				writeToTable(id, range, data, true)
+				writeToTable(sheetId, range, data, true)
 			} catch (e: IllegalArgumentException) {
-				println("And this won't be fixed by rename")
+				logger.warn("And this won't be fixed by rename")
 			}
 		}
 	}
 	
 	@Synchronized
-	fun updateCellsWhere(sheetId: String = this.sheetId, page: String, criteria: (List<String>) -> Boolean, updateFx: (MutableList<String>) -> MutableList<String>) {
+	fun updateCellsWhere(sheetId: String, page: String, criteria: (List<String>) -> Boolean, updateFx: (MutableList<String>) -> MutableList<String>) {
 		val resp = restTemplate.getForEntity("https://sheets.googleapis.com/v4/spreadsheets/$sheetId/values/$page" +
 				"?access_token=${gAuthAPI.accessToken}", String::class.java)
 		val arrays = JsonParser().parse(resp.body).asJsonObject.getAsJsonArray("values").map {
 			it.asJsonArray.map { it.asString }
 		}
 		
-		arrays.forEach { it.forEach { print(it + "\t") }; println("") }
-		
 		(0 until arrays.size).filter {
 			criteria.invoke(arrays[it])
-		}.stream().peek { println("NOT NULL") }
-			.forEach {
-				//				clearData(sheetId, "$page!A${it + 1}:Z${it + 1}")
-				writeToTable(sheetId = sheetId, page = page, row = it + 1, data = updateFx.invoke(arrays[it].toMutableList()).toTypedArray())
-			}
+		}.stream().forEach {
+			//				clearData(sheetId, "$page!A${it + 1}:Z${it + 1}")
+			writeArrayToTable(sheetId = sheetId, page = page, row = it + 1, data = updateFx.invoke(arrays[it].toMutableList()).toTypedArray())
+		}
 	}
 	
 	@Synchronized
@@ -187,9 +227,6 @@ class GSheetsModel {
 		}
 		
 		if (response.statusCodeValue != 200) {
-			return false
-		}
-		if (response.statusCodeValue == 404) {
 			return false
 		}
 		try {

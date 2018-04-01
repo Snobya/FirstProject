@@ -170,20 +170,30 @@ class EventAPI(
 	 * @param offerName is name of offer, like "2-people room", "econom", "all-inclusive" etc.
 	 * @param currency is optional: currency of event. default is UAH.
 	 * @param request request can contain params, each of may represent variant of price and it's price as a value:
-	 * Student - 2500
-	 * Normal - 999.99
+	 * Student - 2500/3500
+	 * Normal - 4999.99/5999.99
+	 * If price is sent without / (like: VIP 7500) deposit and price are equal (7500)
 	 */
 	@PostMapping("/offer/set")
 	fun offerSet(@RequestParam id: String, @RequestParam dateId: String, @RequestParam offerName: String,
 	             @RequestParam(defaultValue = "UAH") currency: String? = null,
 	             request: HttpServletRequest): ResponseEntity<*> {
-		val map = mutableMapOf<String, Double>()
+		val depositMap = mutableMapOf<String, Double>()
+		val priceMap = mutableMapOf<String, Double>()
+		
 		request.parameterMap.forEach { param, value ->
 			if (!param.isAnyOf("id", "dateId", "offerName")) {
-				map[param] = value[0].toDouble()
+				try {
+					depositMap[param] = value[0].split("/")[0].toDouble()
+					priceMap[param] = value[0].split("/")[1].toDouble()
+				} catch (e: Exception) {
+					depositMap[param] = value[0].toDouble()
+					priceMap[param] = value[0].toDouble()
+				}
 			}
 		}
-		return Ret.ok(eventModel.addEventOffer(id, dateId, offerName, map, currency))
+		return Ret.ok(eventModel.addEventOffer(id, dateId, offerName, deposits = depositMap,
+				prices = priceMap, currency = currency))
 	}
 	
 	/**
