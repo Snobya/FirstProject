@@ -17,7 +17,6 @@ import javax.servlet.http.HttpServletRequest
 @RestController
 @RequestMapping("/api/event")
 class EventAPI(
-		val eventRepo: EventRepo,
 		val eventModel: EventModel) {
 	
 	/**
@@ -94,6 +93,14 @@ class EventAPI(
 	              @RequestParam(required = false) info: String?,
 	              @RequestParam(required = false) image: String?): ResponseEntity<*> {
 		return Ret.ok(eventModel.edit(id, title, info, image))
+	}
+	
+	/**
+	 * Sets curator by ID. Return 403 or 404 if user with this ID doesn't exist
+	 */
+	@PostMapping("/curator")
+	fun setCurator(@RequestParam id: String, @RequestParam userId: String): ResponseEntity<*> {
+		return Ret.ok(eventModel.setCurator(id, userId))
 	}
 	
 	/**

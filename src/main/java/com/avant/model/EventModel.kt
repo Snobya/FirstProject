@@ -1,5 +1,6 @@
 package com.avant.model
 
+import com.avant.auth.AuthController
 import com.avant.entity.Event
 import com.avant.repo.EventRepo
 import com.avant.util.Locks
@@ -14,7 +15,8 @@ import java.time.LocalDateTime
 @Service
 class EventModel(
 		val eventRepo: EventRepo,
-		val gSheetsModelProxy: GSheetsModelProxy) {
+		val gSheetsModelProxy: GSheetsModelProxy,
+		val authController: AuthController) {
 	
 	fun ping() = "ping"
 	
@@ -39,6 +41,10 @@ class EventModel(
 		title?.apply { it.title = this }
 		info?.apply { it.info = this }
 		image?.apply { it.info = this }
+	}
+	
+	fun setCurator(eventId: String, userId: String) = updateEvent(eventId) {
+		it.curator = authController.getUserById(userId)
 	}
 	
 	fun deleteEvent(eventId: String) = Locks.withBlock(eventId) {

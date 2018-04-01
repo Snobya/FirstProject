@@ -1,9 +1,11 @@
 package com.avant.entity
 
+import com.avant.auth.User
 import com.avant.model.DefaultData
 import com.avant.util.findOne
 import com.avant.util.toMillis
 import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.mapping.DBRef
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -14,6 +16,8 @@ import kotlin.collections.HashMap
 data class Event(@Id var id: String = UUID.randomUUID().toString(),
                  var title: String) {
 	
+	@DBRef
+	var curator: User? = null
 	var info: String = "Here is nothing here yet."
 	var headImg: String = DefaultData.instance.defaultImage()
 	var content = mutableListOf<Pair<String, String>>()
