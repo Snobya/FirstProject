@@ -4,11 +4,12 @@ import com.avant.entity.Event
 import com.avant.entity.Order
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
+import java.text.DecimalFormat
 import java.time.format.DateTimeFormatter
 import javax.annotation.PostConstruct
 
 @Service
-class GSheetsOrderProxy(
+class GSheetsModelProxy(
 		@Lazy val gSheetsModel: GSheetsModel,
 		@Lazy val orderModel: OrderModel) {
 	
@@ -40,7 +41,14 @@ class GSheetsOrderProxy(
 	}
 	
 	suspend fun onOrderUpdate(order: Order) {
-	
+		gSheetsModel.updateCellsWhere(gSheetsModel.sheetsIds.params[order.event.id]!!,
+				order.dateInfo.startDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+				{ it[0] == order.id },
+				{
+					it[5] = DecimalFormat("#,###.##").format(order.orderDeposit)
+					return@updateCellsWhere it
+				}
+		)
 	}
 	
 }

@@ -4,6 +4,7 @@ import com.avant.entity.Event
 import com.avant.repo.EventRepo
 import com.avant.util.Locks
 import com.avant.util.findOne
+import kotlinx.coroutines.experimental.launch
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
@@ -12,7 +13,8 @@ import java.time.LocalDateTime
 
 @Service
 class EventModel(
-		val eventRepo: EventRepo) {
+		val eventRepo: EventRepo,
+		val gSheetsModelProxy: GSheetsModelProxy) {
 	
 	fun ping() = "ping"
 	
@@ -29,7 +31,9 @@ class EventModel(
 		eventRepo.save(Event(title = title).apply {
 			this.info = info
 			this.headImg = image
-		})
+		}).also {
+			launch { gSheetsModelProxy.onEventCreate(it) }
+		}
 	
 	fun edit(eventId: String, title: String? = null, info: String? = null, image: String? = null) = updateEvent(eventId) {
 		title?.apply { it.title = this }
@@ -60,14 +64,19 @@ class EventModel(
 	
 	fun addEventDate(eventId: String, startDate: LocalDateTime, endDate: LocalDateTime) = updateEvent(eventId) {
 		it.addDate(Event.EventDate(startDate = startDate, endDate = endDate))
+		launch {
+			gSheetsModelProxy.onEventUpdate(it)
+		}
 	}
 	
-	// TODO Test this
 	fun editEventDate(eventId: String, dateId: String, startDate: LocalDateTime? = null, endDate: LocalDateTime? = null) = updateEvent(eventId) {
 		val date = (it.dates.findOne { it.id == dateId } ?: throw FileNotFoundException("DateId not found"))
 		startDate?.apply { date.startDate = this }
 		endDate?.apply { date.endDate = this }
 		it.findClosestDate()
+		launch {
+			gSheetsModelProxy.onEventUpdate(it)
+		}
 	}
 	
 	fun addEventOffer(eventId: String, dateId: String, name: String, deposits: Map<String, Double>,

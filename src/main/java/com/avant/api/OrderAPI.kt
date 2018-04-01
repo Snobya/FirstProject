@@ -13,14 +13,10 @@ import javax.servlet.http.HttpServletRequest
 
 @RestController
 @RequestMapping("/api/order")
-class OrderAPI {
-	
-	@Autowired
-	private lateinit var eventRepo: EventRepo
-	@Autowired
-	private lateinit var orderModel: OrderModel
-	@Autowired
-	private lateinit var liqPayModel: LiqPayModel
+class OrderAPI(
+		val eventRepo: EventRepo,
+		val orderModel: OrderModel,
+		val liqPayModel: LiqPayModel) {
 	
 	@PostMapping("/create")
 	fun create(req: HttpServletRequest,

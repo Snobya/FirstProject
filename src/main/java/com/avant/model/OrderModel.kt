@@ -15,7 +15,8 @@ class OrderModel(
 		val orderRepo: OrderRepo,
 		val eventModel: EventModel,
 		val mailSender: MailSender,
-		val liqPayModel: LiqPayModel) {
+		val liqPayModel: LiqPayModel,
+		val gSheetsModelProxy: GSheetsModelProxy) {
 	
 	fun createOrder(eventId: String, dateId: String, mail: String?, comment: String?): Order {
 		val event: Event = eventModel.getEvent(eventId)
@@ -24,6 +25,9 @@ class OrderModel(
 		order.comment = comment
 		if (mail != null) {
 			mailSender.sendCreateOrderEmail(order)
+		}
+		launch {
+			gSheetsModelProxy.onOrderCreate(order)
 		}
 		return orderRepo.save(order)
 	}
@@ -76,7 +80,7 @@ class OrderModel(
 			mailSender.sendDepositEmail(it, cash)
 		}
 		launch {
-			// TODO GSheets write
+			gSheetsModelProxy.onOrderUpdate(it)
 		}
 	}
 	
