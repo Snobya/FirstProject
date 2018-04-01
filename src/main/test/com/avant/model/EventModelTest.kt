@@ -109,9 +109,9 @@ internal class EventModelTest {
 	fun addEventOffer() {
 		val date = eventModel.getEvent(testId).dates[0]
 		val currency = "UAH"
-		eventModel.addEventOffer(testId, date.id, "Deluxe", mapOf("Студент" to 5500.0, "Обычный" to 8000.0), currency)
-		eventModel.addEventOffer(testId, date.id, "Semi-Luxe", mapOf("Студент" to 3500.0, "Обычный" to 6000.0), currency)
-		eventModel.addEventOffer(testId, date.id, "Economy", mapOf("Студент" to 2200.0, "Обычный" to 3000.0), currency)
+		eventModel.addEventOffer(testId, date.id, "Deluxe", mapOf("Студент" to 5500.0, "Обычный" to 8000.0), mapOf("Студент" to 5500.0, "Обычный" to 8000.0), currency)
+		eventModel.addEventOffer(testId, date.id, "Semi-Luxe", mapOf("Студент" to 5500.0, "Обычный" to 8000.0), mapOf("Студент" to 3500.0, "Обычный" to 6000.0), currency)
+		eventModel.addEventOffer(testId, date.id, "Economy", mapOf("Студент" to 5500.0, "Обычный" to 8000.0), mapOf("Студент" to 2200.0, "Обычный" to 3000.0), currency)
 		assertEquals(eventModel.getEventOffers(testId, date.id).offers.size, date.offers.size + 3)
 		for (offer in eventModel.getEventOffers(testId, date.id).offers) {
 			assertEquals(offer.prices.size, 2)
