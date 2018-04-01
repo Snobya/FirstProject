@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Controller
 import org.springframework.stereotype.Service
+import java.io.FileNotFoundException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -49,6 +50,15 @@ class AuthController(
 	fun createAccessToken(refreshToken: String) = createAccessToken(
 			tokenRepo.findById(refreshToken)
 				.orElseThrow { IllegalArgumentException("Wrong refresh token") })
+	
+	fun getUserById(id: String): User = activeTokens.values.stream()
+		.filter { it.user.id == id }
+		.findAny()
+		.map { it.user }
+		.orElseGet {
+			userRepo.findById(id).orElseThrow { FileNotFoundException("User not found") }
+		}
+	
 	
 	fun getUser(accessToken: String): User =
 		(activeTokens[accessToken] ?: throw NotLoggedInException("Access token wrong or expired")).user

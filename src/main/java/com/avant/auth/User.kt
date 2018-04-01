@@ -12,4 +12,6 @@ class User(private val mail: String) : Saveable {
 	var photo: String? = null
 	var phone: String? = null
 	
+	var isAdmin = false
+	
 }
