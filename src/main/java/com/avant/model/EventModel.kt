@@ -40,7 +40,7 @@ class EventModel(
 	fun edit(eventId: String, title: String? = null, info: String? = null, image: String? = null) = updateEvent(eventId) {
 		title?.apply { it.title = this }
 		info?.apply { it.info = this }
-		image?.apply { it.info = this }
+		image?.apply { it.headImg = this }
 	}
 	
 	fun setCurator(eventId: String, userId: String) = updateEvent(eventId) {
