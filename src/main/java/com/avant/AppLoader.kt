@@ -1,6 +1,5 @@
 package com.avant
 
-import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
@@ -15,6 +14,7 @@ fun main(args: Array<String>) {
 
 TODO Global tasks
 
+1. FileAPI not working?
 2. Person tracker (for users who bought offer) - possible later
 3. Optimize Mongo queries - in OrderModel.
 4. Render special pages for CEO

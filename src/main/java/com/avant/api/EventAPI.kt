@@ -7,6 +7,7 @@ import com.avant.util.isAnyOf
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.io.FileNotFoundException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.servlet.http.HttpServletRequest
@@ -18,6 +19,11 @@ import javax.servlet.http.HttpServletRequest
 @RequestMapping("/api/event")
 class EventAPI(
 		val eventModel: EventModel) {
+	
+	@GetMapping("/{id}")
+	fun getById(@PathVariable id: String): ResponseEntity<*> {
+		return Ret.ok(eventModel.eventRepo.findById(id).orElseThrow { FileNotFoundException("Event not found") })
+	}
 	
 	/**
 	 * Get all the events by pages.

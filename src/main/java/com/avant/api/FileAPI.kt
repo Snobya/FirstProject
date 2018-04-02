@@ -64,13 +64,13 @@ class FileAPI {
 	
 	@RequestMapping("/get")
 	fun getFile(response: HttpServletResponse, @RequestParam("file") filePath: String) {
-		response.sendRedirect(amazonServer + bucketName + "/" + filePath)
+		response.sendRedirect("$amazonServer$bucketName/$filePath")
 	}
 	
 	@RequestMapping("/getimg/{size}")
 	@Throws(Exception::class)
 	fun getimg(@PathVariable("size") size: Int,
-	           @RequestParam(value = "img", required = false) filePath: String,
+	           @RequestParam(required = false) filePath: String,
 	           response: HttpServletResponse, request: HttpServletRequest) {
 		
 		if (s3Client!!.doesObjectExist(bucketName, "resized/" + size + filePath)) {
@@ -154,48 +154,47 @@ class FileAPI {
 		}
 		
 	}
-	//
+	
 	//	@Auth(Auth.AuthType.ADMIN)
-	//	@RequestMapping(value = "/upload", method = arrayOf(RequestMethod.POST))
-	//	@Throws(Exception::class)
-	//	fun upload(request: HttpServletRequest, @RequestParam(value = "key", required = false) key: String?): ResponseEntity<*> {
-	//		val filePart = request.getPart("file") // Retrieves <input type="file" name="file">
-	//		val fileExt = filePart.submittedFileName.substring(filePart.submittedFileName.lastIndexOf("."))
-	//		val fileName = UUID.randomUUID().toString() + fileExt
-	//		if (key != null) {
-	//			(keys as java.util.Map<String, List<String>>).putIfAbsent(key, ArrayList())
-	//			keys[key].add(fileName)
-	//		}
-	//
-	//		val inputStream = filePart.inputStream
-	//		val path = System.getProperty("user.dir") + "/src/main/resources/files/"
-	//		val file = File(path + fileName)
-	//		println("Uploading: " + file.absolutePath)
-	//		try {
-	//			file.createNewFile()
-	//		} catch (e: Exception) {
-	//			println("Error creating " + file.absolutePath)
-	//			file.parentFile.mkdirs()
-	//			file.createNewFile()
-	//		}
-	//
-	//		val outputStream = FileOutputStream(file)
-	//
-	//		var read = 0
-	//		val bytes = ByteArray(4096)
-	//
-	//		while ((read = inputStream.read(bytes)) != -1) {
-	//			outputStream.write(bytes, 0, read)
-	//		}
-	//
-	//		outputStream.close()
-	//
-	//		s3Client!!.putObject(PutObjectRequest("avant-html-1", fileName, file))
-	//		file.delete()
-	//
-	//		return ResponseEntity.ok().body(fileName)
-	//	}
-	//
+	@PostMapping("/upload")
+	fun upload(request: HttpServletRequest, @RequestParam(required = false) key: String?): ResponseEntity<*> {
+		val filePart = request.getPart("file") // Retrieves <input type="file" name="file">
+		val fileExt = filePart.submittedFileName.substring(filePart.submittedFileName.lastIndexOf("."))
+		val fileName = UUID.randomUUID().toString() + fileExt
+//		if (key != null) {
+//			(keys as MutableMap<String, List<String>>).putIfAbsent(key, ArrayList())
+//			keys[key].add(fileName)
+//		}
+//
+//		val inputStream = filePart.inputStream
+//		val path = System.getProperty("user.dir") + "/src/main/resources/files/"
+//		val file = File(path + fileName)
+//		println("Uploading: " + file.absolutePath)
+//		try {
+//			file.createNewFile()
+//		} catch (e: Exception) {
+//			println("Error creating " + file.absolutePath)
+//			file.parentFile.mkdirs()
+//			file.createNewFile()
+//		}
+//
+//		val outputStream = FileOutputStream(file)
+//
+//		var read = 0
+//		val bytes = ByteArray(4096)
+//
+//		while ((read = inputStream.read(bytes)) != -1) {
+//			outputStream.write(bytes, 0, read)
+//		}
+//
+//		outputStream.close()
+//
+//		s3Client!!.putObject(PutObjectRequest("avant-html-1", fileName, file))
+//		file.delete()
+		
+		return ResponseEntity.ok().body(fileName)
+	}
+	
 	//	@PostMapping("/upload/{key}")
 	//	@Throws(Exception::class)
 	//	fun uploadKey(request: HttpServletRequest, @PathVariable("key") key: String): ResponseEntity<*> {
