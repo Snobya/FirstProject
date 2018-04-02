@@ -60,6 +60,11 @@ class EventModel(
 		it.content.removeIf { it.first == key }
 	}
 	
+	fun setContent(eventId: String, content: Map<String, String>) = updateEvent(eventId) {
+		it.content.clear()
+		content.forEach { key, value -> it.content.add(key to value) }
+	}
+	
 	fun addPhotos(eventId: String, vararg photos: String) = updateEvent(eventId) {
 		photos.forEach { photo -> it.photos.add(photo) }
 	}

@@ -128,6 +128,23 @@ class EventAPI(
 	}
 	
 	/**
+	 * Delete all the content and sets what sent.
+	 * @param request Every field should start with "eventContent:" to avoid data which was sent automatically.
+	 * Example: eventContent:Info  --  Beautiful sea resort
+	 * eventContact:Blah-blah  --  Some other info, <h1>can be with tags</h1> available.
+	 */
+	@PostMapping("/content/set")
+	fun contentSet(@RequestParam id: String,
+	               request: HttpServletRequest): ResponseEntity<*> {
+		val content = request.parameterMap
+			.filterKeys { it.startsWith("eventContent:") }
+			.mapKeys { it.key.substringAfter("eventContent:") }
+			.mapValues { if (it.value.size == 1) it.value[0] else it.value.toString() }
+		
+		return Ret.ok(eventModel.setContent(id, content))
+	}
+	
+	/**
 	 * Removes content by name
 	 */
 	@PostMapping("/content/remove")
