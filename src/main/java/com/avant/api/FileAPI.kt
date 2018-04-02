@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.GetObjectRequest
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.model.S3Object
+import com.amazonaws.util.IOUtils
 import kotlinx.coroutines.experimental.launch
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
@@ -46,7 +47,7 @@ class FileAPI {
 	
 	
 	private val filePlace = System.getProperty("user.dir") + "/src/main/resources/files/"
-	private val keys = ConcurrentHashMap<String, List<String>>()
+	private val keys = ConcurrentHashMap<String, MutableList<String>>()
 	private var s3Client: AmazonS3? = null
 	
 	@PostConstruct
@@ -161,36 +162,30 @@ class FileAPI {
 		val filePart = request.getPart("file") // Retrieves <input type="file" name="file">
 		val fileExt = filePart.submittedFileName.substring(filePart.submittedFileName.lastIndexOf("."))
 		val fileName = UUID.randomUUID().toString() + fileExt
-//		if (key != null) {
-//			(keys as MutableMap<String, List<String>>).putIfAbsent(key, ArrayList())
-//			keys[key].add(fileName)
-//		}
-//
-//		val inputStream = filePart.inputStream
-//		val path = System.getProperty("user.dir") + "/src/main/resources/files/"
-//		val file = File(path + fileName)
-//		println("Uploading: " + file.absolutePath)
-//		try {
-//			file.createNewFile()
-//		} catch (e: Exception) {
-//			println("Error creating " + file.absolutePath)
-//			file.parentFile.mkdirs()
-//			file.createNewFile()
-//		}
-//
-//		val outputStream = FileOutputStream(file)
-//
-//		var read = 0
-//		val bytes = ByteArray(4096)
-//
-//		while ((read = inputStream.read(bytes)) != -1) {
-//			outputStream.write(bytes, 0, read)
-//		}
-//
-//		outputStream.close()
-//
-//		s3Client!!.putObject(PutObjectRequest("avant-html-1", fileName, file))
-//		file.delete()
+		if (key != null) {
+			keys.getOrPut(key, { ArrayList() }).add(fileName)
+		}
+		
+		val inputStream = filePart.inputStream
+		val path = System.getProperty("user.dir") + "/src/main/resources/files/"
+		val file = File(path + fileName)
+		println("Uploading: " + file.absolutePath)
+		try {
+			file.createNewFile()
+		} catch (e: Exception) {
+			println("Error creating " + file.absolutePath)
+			file.parentFile.mkdirs()
+			file.createNewFile()
+		}
+		
+		val outputStream = FileOutputStream(file)
+		
+		IOUtils.copy(inputStream, outputStream)
+		
+		outputStream.close()
+		
+		s3Client!!.putObject(PutObjectRequest("avant-html-1", fileName, file))
+		file.delete()
 		
 		return ResponseEntity.ok().body(fileName)
 	}
