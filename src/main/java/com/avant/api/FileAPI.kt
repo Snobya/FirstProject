@@ -9,6 +9,7 @@ import com.amazonaws.services.s3.model.GetObjectRequest
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.model.S3Object
 import com.amazonaws.util.IOUtils
+import com.avant.util.Ret
 import kotlinx.coroutines.experimental.launch
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
@@ -187,7 +188,7 @@ class FileAPI {
 		s3Client!!.putObject(PutObjectRequest("avant-html-1", fileName, file))
 		file.delete()
 		
-		return ResponseEntity.ok().body(fileName)
+		return Ret.ok(fileName)
 	}
 	
 	//	@PostMapping("/upload/{key}")
