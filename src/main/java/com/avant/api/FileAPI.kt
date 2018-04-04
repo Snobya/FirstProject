@@ -1,10 +1,8 @@
 package com.avant.api
 
 import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.GetObjectRequest
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.model.S3Object
@@ -12,7 +10,6 @@ import com.amazonaws.util.IOUtils
 import com.avant.util.Ret
 import kotlinx.coroutines.experimental.launch
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.ApplicationContext
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.core.env.ConfigurableEnvironment
 import org.springframework.http.ResponseEntity
@@ -20,10 +17,8 @@ import org.springframework.util.FileCopyUtils
 import org.springframework.web.bind.annotation.*
 
 import javax.imageio.ImageIO
-import javax.servlet.ServletContext
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import javax.servlet.http.Part
 import java.awt.*
 import java.awt.image.BufferedImage
 import java.io.*
@@ -72,23 +67,23 @@ class FileAPI {
 	@RequestMapping("/getimg/{size}")
 	@Throws(Exception::class)
 	fun getimg(@PathVariable("size") size: Int,
-	           @RequestParam(required = false) filePath: String,
+	           @RequestParam file: String,
 	           response: HttpServletResponse, request: HttpServletRequest) {
 		
-		if (s3Client!!.doesObjectExist(bucketName, "resized/" + size + filePath)) {
-			response.sendRedirect(amazonServer + bucketName + "/resized/" + size + filePath)
+		if (s3Client!!.doesObjectExist(bucketName, "resized/$size$file")) {
+			response.sendRedirect("$amazonServer$bucketName/resized/$size$file")
 			return
 		}
 		
 		var s3Object: S3Object? = null
-		println("creating resized version of $filePath ($size)")
-		val oldFile = File(filePlace + filePath)
-		val newFile = File(System.getProperty("user.dir") + "/src/main/resources/files/" + filePath)
+		println("creating resized version of $file ($size)")
+		val oldFile = File(filePlace + file)
+		val newFile = File(System.getProperty("user.dir") + "/src/main/resources/files/" + file)
 		try {
 			oldFile.createNewFile()
 			
 			try {
-				s3Object = s3Client!!.getObject(GetObjectRequest(bucketName, filePath))
+				s3Object = s3Client!!.getObject(GetObjectRequest(bucketName, file))
 				FileCopyUtils.copy(
 						s3Object!!.objectContent,
 						FileOutputStream(oldFile)
@@ -105,7 +100,7 @@ class FileAPI {
 				val h: Int
 				val w: Int
 				if (Math.max(originalImage.height, originalImage.width) <= size) {
-					getFile(response, filePath)
+					getFile(response, file)
 					return
 				}
 				if (originalImage.height > originalImage.width) {
@@ -127,12 +122,12 @@ class FileAPI {
 			
 			// <!-- img resize up -->
 			
-			s3Client!!.putObject(PutObjectRequest(bucketName, "resized/" + size + filePath, newFile))
+			s3Client!!.putObject(PutObjectRequest(bucketName, "resized/" + size + file, newFile))
 			
 			val sc = request.session.servletContext
-			response.contentType = sc.getMimeType(filePath)
+			response.contentType = sc.getMimeType(file)
 			response.setContentLength(newFile.length().toInt())
-			response.setHeader("Content-Disposition", "attachment; filename=\"" + filePath + "\"")
+			response.setHeader("Content-Disposition", "attachment; filename=\"" + file + "\"")
 			try {
 				FileCopyUtils.copy(FileInputStream(newFile), response.outputStream)
 			} catch (e: IOException) {
@@ -141,7 +136,7 @@ class FileAPI {
 			
 			newFile.delete()
 			oldFile.delete()
-			println("done resized version of $filePath ($size)")
+			println("done resized version of $file ($size)")
 			
 			
 		} catch (e: Exception) {
