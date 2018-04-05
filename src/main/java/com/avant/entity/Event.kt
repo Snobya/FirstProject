@@ -56,12 +56,14 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 		val endDateTimeStamp = startDate.toMillis()
 		
 		fun getDepositPrice(name: String, type: String): Double =
-			offers.findOne { it.name == name }?.run { this.deposits[type] }
-					?: throw IllegalArgumentException("Such request not found")
+			offers.findOne { it.name == name }?.run {
+				this.offerTypes.findOne { it.type == type }?.deposit
+			} ?: throw IllegalArgumentException("Such request not found")
 		
 		fun getFullPrice(name: String, type: String): Double =
-			offers.findOne { it.name == name }?.run { this.prices[type] }
-					?: throw IllegalArgumentException("Such request not found")
+			offers.findOne { it.name == name }?.run {
+				this.offerTypes.findOne { it.type == type }?.price
+			} ?: throw IllegalArgumentException("Such request not found")
 	}
 	
 	/**
@@ -70,9 +72,24 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 	 * price map is: student - 2500, teacher - 3500
 	 * prices contains all the prices in map: key-value
 	 */
-	data class EventOffer(var currency: String = "UAH", var name: String,
-	                      var deposits: MutableMap<String, Double>,
-	                      var prices: MutableMap<String, Double>)
+	data class EventOffer(var name: String, var currency: String = "UAH",
+	                      var offerTypes: MutableList<EventOfferType>) {
+		
+		constructor(name: String, deposits: Map<String, Double>, prices: Map<String, Double>,
+		            currency: String) : this(name = name, currency = currency, offerTypes = mutableListOf()) {
+			prices.forEach { type, value ->
+				offerTypes.add(EventOfferType(type = type,
+						price = value,
+						deposit = deposits[type] ?: value))
+			}
+		}
+		
+	}
+	
+	//	var deposits: MutableMap<String, Double>,
+	//	var prices: MutableMap<String, Double>
+	
+	data class EventOfferType(var type: String, var price: Double, var deposit: Double = price)
 	
 }
 

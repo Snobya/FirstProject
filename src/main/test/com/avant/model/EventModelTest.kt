@@ -4,6 +4,7 @@ import com.avant.entity.Event
 import com.avant.repo.EventRepo
 import com.avant.util.isAnyOf
 import com.avant.util.print
+import com.avant.util.tryElse
 import org.junit.jupiter.api.*
 
 import org.junit.jupiter.api.Assertions.*
@@ -24,7 +25,7 @@ internal class EventModelTest {
 	@Autowired
 	private lateinit var eventRepo: EventRepo
 	
-	private val testId = "test-event-id"
+	private val testId = "test-event-id-" + UUID.randomUUID().toString()
 	
 	@BeforeAll
 	fun setup() {
@@ -59,7 +60,7 @@ internal class EventModelTest {
 	fun edit() {
 		val testDescription = "Info is now: " + UUID.randomUUID().toString().slice(0..8)
 		eventModel.edit(eventId = testId, info = testDescription)
-		assertEquals(eventModel.getEvent("test-event-id").info, testDescription)
+		assertEquals(eventModel.getEvent(testId).info, testDescription)
 	}
 	
 	@Test
@@ -114,9 +115,8 @@ internal class EventModelTest {
 		eventModel.addEventOffer(testId, date.id, "Economy", mapOf("Студент" to 5500.0, "Обычный" to 8000.0), mapOf("Студент" to 2200.0, "Обычный" to 3000.0), currency)
 		assertEquals(eventModel.getEventOffers(testId, date.id).offers.size, date.offers.size + 3)
 		for (offer in eventModel.getEventOffers(testId, date.id).offers) {
-			assertEquals(offer.prices.size, 2)
+			assertEquals(offer.offerTypes.size, 2)
 		}
 	}
-	
 	
 }
