@@ -77,14 +77,17 @@ class GSheetsModel(
 			return
 		}
 		val eventDates = event.dates.map { it.startDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) }.toMutableSet()
-		JsonParser().parse(response.body).asJsonObject.getAsJsonArray("sheets").forEach { sheet ->
-			val name = sheet.asJsonObject.getAsJsonObject("properties").get("title").asString
-			eventDates.remove(name)
+		try {
+			JsonParser().parse(response.body).asJsonObject.getAsJsonArray("sheets").forEach { sheet ->
+				val name = sheet.asJsonObject.getAsJsonObject("properties").get("title").asString
+				eventDates.remove(name)
+			}
+			for (date in eventDates) {
+				createPage(sheetsIds.params[event.id]!!, date)
+			}
+		} catch (e: Exception) {
+			createEventTable(event)
 		}
-		for (date in eventDates) {
-			createPage(sheetsIds.params[event.id]!!, date)
-		}
-		return
 	}
 	
 	@Synchronized
