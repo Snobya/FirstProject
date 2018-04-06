@@ -214,11 +214,11 @@ class EventAPI(
 		request.parameterMap.forEach { param, value ->
 			if (!param.isAnyOf("id", "dateId", "offerName")) {
 				try {
-					depositMap[param] = value[0].split("/")[0].toDouble()
-					priceMap[param] = value[0].split("/")[1].toDouble()
+					depositMap[param] = value[0].split("/")[0].toDoubleOrNull() ?: value[0].toInt().toDouble()
+					priceMap[param] = value[0].split("/")[1].toDoubleOrNull() ?: value[0].toInt().toDouble()
 				} catch (e: Exception) {
-					depositMap[param] = value[0].toDouble()
-					priceMap[param] = value[0].toDouble()
+					depositMap[param] = value[0].toDoubleOrNull() ?: value[0].toInt().toDouble()
+					priceMap[param] = value[0].toDoubleOrNull() ?: value[0].toInt().toDouble()
 				}
 			}
 		}
