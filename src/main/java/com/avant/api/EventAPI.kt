@@ -242,6 +242,25 @@ class EventAPI(
 		return Ret.ok(eventModel.setFreeSeats(id, dateId, hasFree))
 	}
 	
+	@PostMapping("/photo/add")
+	fun addPhotos(@RequestParam id: String,
+	              @RequestParam photos: Array<String>): ResponseEntity<*> {
+		return Ret.ok(eventModel.addPhotos(id, *photos))
+	}
+	
+	@PostMapping("/photo/set")
+	fun setPhotos(@RequestParam id: String,
+	              @RequestParam photos: Array<String>): ResponseEntity<*> {
+		return Ret.ok(eventModel.setPhotos(id, *photos))
+	}
+	
+	@PostMapping("/photo/delete")
+	fun deletePhotos(@RequestParam id: String,
+	                 @RequestParam photos: Array<String>): ResponseEntity<*> {
+		return Ret.ok(eventModel.removePhotos(id, *photos))
+	}
+	
+	
 	//	@GetMapping("/rank")
 	//	fun getEvent(@RequestParam(defaultValue = "50") rank: Int,
 	//	             @RequestParam(defaultValue = "0") page: Int) =

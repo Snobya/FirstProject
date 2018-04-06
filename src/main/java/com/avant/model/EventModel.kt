@@ -69,6 +69,10 @@ class EventModel(
 		photos.forEach { photo -> it.photos.add(photo) }
 	}
 	
+	fun setPhotos(eventId: String, vararg photos: String) = updateEvent(eventId) {
+		it.photos = photos.toMutableList()
+	}
+	
 	fun removePhotos(eventId: String, vararg photos: String) = updateEvent(eventId) {
 		it.photos.removeAll(photos)
 	}
