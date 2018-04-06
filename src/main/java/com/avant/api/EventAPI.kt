@@ -205,7 +205,7 @@ class EventAPI(
 	 */
 	@PostMapping("/offer/set")
 	fun offerSet(@RequestParam id: String, @RequestParam dateId: String, @RequestParam offerName: String,
-	             @RequestParam(defaultValue = "UAH") currency: String? = null,
+	             @RequestParam(required = false) currency: String? = null,
 	             request: HttpServletRequest): ResponseEntity<*> {
 		val depositMap = mutableMapOf<String, Double>()
 		val priceMap = mutableMapOf<String, Double>()
