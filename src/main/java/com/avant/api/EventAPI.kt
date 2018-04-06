@@ -179,7 +179,8 @@ class EventAPI(
 	            @RequestParam endDate: String): ResponseEntity<*> {
 		return Ret.ok(eventModel.addEventDate(
 				id, LocalDateTime.parse(startDate), LocalDateTime.parse(endDate)
-		).dates)
+		).dates.find { it.startDate == LocalDateTime.parse(startDate) }?.id
+				?: throw IllegalStateException("Unexpected error occurred: date not found."))
 	}
 	
 	/**
@@ -196,7 +197,7 @@ class EventAPI(
 	}
 	
 	/**
-	 * Adds offers to event. If offer with exact name already exists - overwrites data.
+	 * Sets offers to event. If offer with exact name already exists - overwrites data.
 	 * @param offerName is name of offer, like "2-people room", "econom", "all-inclusive" etc.
 	 * @param currency is optional: currency of event. default is UAH.
 	 * @param request request can contain params, each of may represent variant of price and it's price as a value:

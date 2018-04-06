@@ -64,6 +64,11 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 			offers.findOne { it.name == name }?.run {
 				this.offerTypes.findOne { it.type == type }?.price
 			} ?: throw IllegalArgumentException("Such request not found")
+		
+		fun addOffer(eventOffer: EventOffer) {
+			offers.removeIf { it.name == eventOffer.name }
+			offers.add(eventOffer)
+		}
 	}
 	
 	/**
