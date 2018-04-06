@@ -22,7 +22,7 @@ class EventAPI(
 	
 	@GetMapping("/{id}")
 	fun getById(@PathVariable id: String): ResponseEntity<*> {
-		return Ret.ok(eventModel.eventRepo.findById(id).orElseThrow { FileNotFoundException("Event not found") })
+		return Ret.ok(eventModel.getEvent(id))
 	}
 	
 	/**
