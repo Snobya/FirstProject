@@ -1,16 +1,15 @@
 package com.avant.api
 
 import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.GetObjectRequest
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.model.S3Object
+import com.amazonaws.util.IOUtils
+import com.avant.util.Ret
 import kotlinx.coroutines.experimental.launch
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.ApplicationContext
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.core.env.ConfigurableEnvironment
 import org.springframework.http.ResponseEntity
@@ -18,10 +17,8 @@ import org.springframework.util.FileCopyUtils
 import org.springframework.web.bind.annotation.*
 
 import javax.imageio.ImageIO
-import javax.servlet.ServletContext
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import javax.servlet.http.Part
 import java.awt.*
 import java.awt.image.BufferedImage
 import java.io.*
@@ -33,7 +30,7 @@ import javax.annotation.PostConstruct
 
 @RestController
 @CrossOrigin
-@RequestMapping("/file")
+@RequestMapping("/api/file")
 class FileAPI {
 	
 	private val bucketName = "avant-html-1"
@@ -46,15 +43,13 @@ class FileAPI {
 	
 	
 	private val filePlace = System.getProperty("user.dir") + "/src/main/resources/files/"
-	private val keys = ConcurrentHashMap<String, List<String>>()
+	private val keys = ConcurrentHashMap<String, MutableList<String>>()
 	private var s3Client: AmazonS3? = null
 	
 	@PostConstruct
 	fun postConstruct() {
 		launch {
-			s3Client = AmazonS3Client.builder().withCredentials(
-					ProfileCredentialsProvider(environment.getProperty("amazon.s3.key"), environment.getProperty("amazon.s3.secret"))
-			).build()
+			s3Client = AmazonS3Client(BasicAWSCredentials(environment.getProperty("amazon.s3.key"), environment.getProperty("amazon.s3.secret")))
 		}
 		
 		val parent = File(filePlace)
@@ -66,29 +61,29 @@ class FileAPI {
 	
 	@RequestMapping("/get")
 	fun getFile(response: HttpServletResponse, @RequestParam("file") filePath: String) {
-		response.sendRedirect(amazonServer + bucketName + "/" + filePath)
+		response.sendRedirect("$amazonServer$bucketName/$filePath")
 	}
 	
 	@RequestMapping("/getimg/{size}")
 	@Throws(Exception::class)
 	fun getimg(@PathVariable("size") size: Int,
-	           @RequestParam(value = "img", required = false) filePath: String,
+	           @RequestParam file: String,
 	           response: HttpServletResponse, request: HttpServletRequest) {
 		
-		if (s3Client!!.doesObjectExist(bucketName, "resized/" + size + filePath)) {
-			response.sendRedirect(amazonServer + bucketName + "/resized/" + size + filePath)
+		if (s3Client!!.doesObjectExist(bucketName, "resized/$size$file")) {
+			response.sendRedirect("$amazonServer$bucketName/resized/$size$file")
 			return
 		}
 		
 		var s3Object: S3Object? = null
-		println("creating resized version of $filePath ($size)")
-		val oldFile = File(filePlace + filePath)
-		val newFile = File(System.getProperty("user.dir") + "/src/main/resources/files/" + filePath)
+		println("creating resized version of $file ($size)")
+		val oldFile = File(filePlace + file)
+		val newFile = File(System.getProperty("user.dir") + "/src/main/resources/files/" + file)
 		try {
 			oldFile.createNewFile()
 			
 			try {
-				s3Object = s3Client!!.getObject(GetObjectRequest(bucketName, filePath))
+				s3Object = s3Client!!.getObject(GetObjectRequest(bucketName, file))
 				FileCopyUtils.copy(
 						s3Object!!.objectContent,
 						FileOutputStream(oldFile)
@@ -105,7 +100,7 @@ class FileAPI {
 				val h: Int
 				val w: Int
 				if (Math.max(originalImage.height, originalImage.width) <= size) {
-					getFile(response, filePath)
+					getFile(response, file)
 					return
 				}
 				if (originalImage.height > originalImage.width) {
@@ -127,12 +122,12 @@ class FileAPI {
 			
 			// <!-- img resize up -->
 			
-			s3Client!!.putObject(PutObjectRequest(bucketName, "resized/" + size + filePath, newFile))
+			s3Client!!.putObject(PutObjectRequest(bucketName, "resized/" + size + file, newFile))
 			
 			val sc = request.session.servletContext
-			response.contentType = sc.getMimeType(filePath)
+			response.contentType = sc.getMimeType(file)
 			response.setContentLength(newFile.length().toInt())
-			response.setHeader("Content-Disposition", "attachment; filename=\"" + filePath + "\"")
+			response.setHeader("Content-Disposition", "attachment; filename=\"" + file + "\"")
 			try {
 				FileCopyUtils.copy(FileInputStream(newFile), response.outputStream)
 			} catch (e: IOException) {
@@ -141,7 +136,7 @@ class FileAPI {
 			
 			newFile.delete()
 			oldFile.delete()
-			println("done resized version of $filePath ($size)")
+			println("done resized version of $file ($size)")
 			
 			
 		} catch (e: Exception) {
@@ -156,48 +151,41 @@ class FileAPI {
 		}
 		
 	}
-	//
+	
 	//	@Auth(Auth.AuthType.ADMIN)
-	//	@RequestMapping(value = "/upload", method = arrayOf(RequestMethod.POST))
-	//	@Throws(Exception::class)
-	//	fun upload(request: HttpServletRequest, @RequestParam(value = "key", required = false) key: String?): ResponseEntity<*> {
-	//		val filePart = request.getPart("file") // Retrieves <input type="file" name="file">
-	//		val fileExt = filePart.submittedFileName.substring(filePart.submittedFileName.lastIndexOf("."))
-	//		val fileName = UUID.randomUUID().toString() + fileExt
-	//		if (key != null) {
-	//			(keys as java.util.Map<String, List<String>>).putIfAbsent(key, ArrayList())
-	//			keys[key].add(fileName)
-	//		}
-	//
-	//		val inputStream = filePart.inputStream
-	//		val path = System.getProperty("user.dir") + "/src/main/resources/files/"
-	//		val file = File(path + fileName)
-	//		println("Uploading: " + file.absolutePath)
-	//		try {
-	//			file.createNewFile()
-	//		} catch (e: Exception) {
-	//			println("Error creating " + file.absolutePath)
-	//			file.parentFile.mkdirs()
-	//			file.createNewFile()
-	//		}
-	//
-	//		val outputStream = FileOutputStream(file)
-	//
-	//		var read = 0
-	//		val bytes = ByteArray(4096)
-	//
-	//		while ((read = inputStream.read(bytes)) != -1) {
-	//			outputStream.write(bytes, 0, read)
-	//		}
-	//
-	//		outputStream.close()
-	//
-	//		s3Client!!.putObject(PutObjectRequest("avant-html-1", fileName, file))
-	//		file.delete()
-	//
-	//		return ResponseEntity.ok().body(fileName)
-	//	}
-	//
+	@PostMapping("/upload")
+	fun upload(request: HttpServletRequest, @RequestParam(required = false) key: String?): ResponseEntity<*> {
+		val filePart = request.getPart("file") // Retrieves <input type="file" name="file">
+		val fileExt = filePart.submittedFileName.substring(filePart.submittedFileName.lastIndexOf("."))
+		val fileName = UUID.randomUUID().toString() + fileExt
+		if (key != null) {
+			keys.getOrPut(key, { ArrayList() }).add(fileName)
+		}
+		
+		val inputStream = filePart.inputStream
+		val path = System.getProperty("user.dir") + "/src/main/resources/files/"
+		val file = File(path + fileName)
+		println("Uploading: " + file.absolutePath)
+		try {
+			file.createNewFile()
+		} catch (e: Exception) {
+			println("Error creating " + file.absolutePath)
+			file.parentFile.mkdirs()
+			file.createNewFile()
+		}
+		
+		val outputStream = FileOutputStream(file)
+		
+		IOUtils.copy(inputStream, outputStream)
+		
+		outputStream.close()
+		
+		s3Client!!.putObject(PutObjectRequest("avant-html-1", fileName, file))
+		file.delete()
+		
+		return Ret.ok(fileName)
+	}
+	
 	//	@PostMapping("/upload/{key}")
 	//	@Throws(Exception::class)
 	//	fun uploadKey(request: HttpServletRequest, @PathVariable("key") key: String): ResponseEntity<*> {

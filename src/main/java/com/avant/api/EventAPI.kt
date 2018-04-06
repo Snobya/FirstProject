@@ -1,25 +1,46 @@
 package com.avant.api
 
 import com.avant.model.EventModel
-import com.avant.repo.EventRepository
 import com.avant.util.Ret
-import org.springframework.beans.factory.annotation.Autowired
+import com.avant.util.isAnyOf
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.io.FileNotFoundException
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import javax.servlet.http.HttpServletRequest
 
 /**
  * API for events and their editing.
  */
 @RestController
 @RequestMapping("/api/event")
-class EventAPI {
+class EventAPI(
+		val eventModel: EventModel) {
 	
-	@Autowired
-	private lateinit var eventRepo: EventRepository
-	@Autowired
-	private lateinit var eventModel: EventModel
+	@GetMapping("/{id}")
+	fun getById(@PathVariable id: String): ResponseEntity<*> {
+		return Ret.ok(eventModel.eventRepo.findById(id).orElseThrow { FileNotFoundException("Event not found") })
+	}
+	
+	/**
+	 * Get all the events by pages.
+	 * @param pageSize is optional. default is 20.
+	 */
+	@GetMapping("/list")
+	fun list(@RequestParam page: Int, @RequestParam(required = false) pageSize: Int? = null): ResponseEntity<*> {
+		return Ret.ok(eventModel.list(page, pageSize ?: 20))
+	}
+	
+	/**
+	 * Get all the events. Warning! This method cause performance issues.
+	 */
+	@GetMapping("/all")
+	fun all(): ResponseEntity<*> {
+		return Ret.ok(eventModel.all())
+	}
 	
 	/**
 	 * Find {count} closest unique events
@@ -37,8 +58,8 @@ class EventAPI {
 	 */
 	@GetMapping("/month")
 	fun monthly(@RequestParam month: String): ResponseEntity<*> {
-		val firstDay = LocalDate.parse(month + "-01")
-		val lastDay = firstDay.withMonth(firstDay.lengthOfMonth())
+		val firstDay = LocalDate.parse("$month-01")
+		val lastDay = firstDay.withDayOfMonth(firstDay.lengthOfMonth())
 		return Ret.ok(eventModel.between(firstDay.atStartOfDay(),
 				lastDay.atTime(23, 59)))
 	}
@@ -59,13 +80,13 @@ class EventAPI {
 	 * Create event with no dates
 	 * @param title title of event
 	 * @param info is info of event
-	 * @param img is photo ID, which can be obtained via FileAPI (WARNING: FileAPI is suspended sue to Amazon S3 issues)
+	 * @param images is photo ID, which can be obtained via FileAPI
 	 */
 	@PostMapping("/create")
 	fun createEvent(@RequestParam title: String,
 	                @RequestParam info: String,
-	                @RequestParam img: String): ResponseEntity<*> {
-		return Ret.ok(eventModel.create(title, info, img))
+	                @RequestParam images: Array<String>): ResponseEntity<*> {
+		return Ret.ok(eventModel.create(title, info, images))
 	}
 	
 	/**
@@ -76,8 +97,16 @@ class EventAPI {
 	fun editEvent(@RequestParam id: String,
 	              @RequestParam(required = false) title: String?,
 	              @RequestParam(required = false) info: String?,
-	              @RequestParam(required = false) image: String?): ResponseEntity<*> {
-		return Ret.ok(eventModel.edit(id, title, info, image))
+	              @RequestParam(required = false) images: Array<String>?): ResponseEntity<*> {
+		return Ret.ok(eventModel.edit(id, title, info, images))
+	}
+	
+	/**
+	 * Sets curator by ID. Return 403 or 404 if user with this ID doesn't exist
+	 */
+	@PostMapping("/curator")
+	fun setCurator(@RequestParam id: String, @RequestParam userId: String): ResponseEntity<*> {
+		return Ret.ok(eventModel.setCurator(id, userId))
 	}
 	
 	/**
@@ -96,6 +125,23 @@ class EventAPI {
 	               @RequestParam title: String,
 	               @RequestParam content: String): ResponseEntity<*> {
 		return Ret.ok(eventModel.addContent(id, title, content).content)
+	}
+	
+	/**
+	 * Delete all the content and sets what sent.
+	 * @param request Every field should start with "eventContent:" to avoid data which was sent automatically.
+	 * Example: eventContent:Info  --  Beautiful sea resort
+	 * eventContact:Blah-blah  --  Some other info, <h1>can be with tags</h1> available.
+	 */
+	@PostMapping("/content/set")
+	fun contentSet(@RequestParam id: String,
+	               request: HttpServletRequest): ResponseEntity<*> {
+		val content = request.parameterMap
+			.filterKeys { it.startsWith("eventContent:") }
+			.mapKeys { it.key.substringAfter("eventContent:") }
+			.mapValues { if (it.value.size == 1) it.value[0] else it.value.toString() }
+		
+		return Ret.ok(eventModel.setContent(id, content))
 	}
 	
 	/**
@@ -131,9 +177,13 @@ class EventAPI {
 	fun dateAdd(@RequestParam id: String,
 	            @RequestParam startDate: String,
 	            @RequestParam endDate: String): ResponseEntity<*> {
+		val zonedStartDate = ZonedDateTime.of(LocalDateTime.parse(startDate), ZoneId.of("+2"))
 		return Ret.ok(eventModel.addEventDate(
-				id, LocalDateTime.parse(startDate), LocalDateTime.parse(endDate)
-		).dates)
+				id,
+				zonedStartDate,
+				ZonedDateTime.of(LocalDateTime.parse(endDate), ZoneId.of("+2"))
+		).dates.find { it.startDate == zonedStartDate }?.id
+				?: throw IllegalStateException("Unexpected error occurred: date not found."))
 	}
 	
 	/**
@@ -145,38 +195,77 @@ class EventAPI {
 	             @RequestParam(required = false) startDate: String?,
 	             @RequestParam(required = false) endDate: String?): ResponseEntity<*> {
 		return Ret.ok(eventModel.editEventDate(id, dateId,
-				startDate?.let { LocalDateTime.parse(it) },
-				endDate?.let { LocalDateTime.parse(it) }).dates)
+				startDate?.let { ZonedDateTime.of(LocalDateTime.parse(it), ZoneId.of("+2")) },
+				endDate?.let { ZonedDateTime.of(LocalDateTime.parse(it), ZoneId.of("+2")) }).dates)
 	}
 	
 	/**
-	 * Offers manipulation will be added later (20-21.03)
+	 * Sets offers to event. If offer with exact name already exists - overwrites data.
+	 * @param offerName is name of offer, like "2-people room", "econom", "all-inclusive" etc.
+	 * @param currency is optional: currency of event. default is UAH.
+	 * @param request request can contain params, each of may represent variant of price and it's price as a value:
+	 * Student - 2500/3500
+	 * Normal - 4999.99/5999.99
+	 * If price is sent without / (like: VIP 7500) deposit and price are equal (7500)
 	 */
-	@PostMapping("/offers/todo")
-	fun todoOffers(): ResponseEntity<*> {
-		return Ret.code(500, "Not implemented")
+	@PostMapping("/offer/set")
+	fun offerSet(@RequestParam id: String, @RequestParam dateId: String, @RequestParam offerName: String,
+	             @RequestParam(required = false) currency: String? = null,
+	             request: HttpServletRequest): ResponseEntity<*> {
+		val depositMap = mutableMapOf<String, Double>()
+		val priceMap = mutableMapOf<String, Double>()
+		
+		request.parameterMap.forEach { param, value ->
+			if (!param.isAnyOf("id", "dateId", "offerName")) {
+				try {
+					depositMap[param] = value[0].split("/")[0].run { this.toDoubleOrNull() ?: this.toInt().toDouble() }
+					priceMap[param] = value[0].split("/")[1].run { this.toDoubleOrNull() ?: this.toInt().toDouble() }
+				} catch (e: Exception) {
+					depositMap[param] = value[0].run { this.toDoubleOrNull() ?: this.toInt().toDouble() }
+					priceMap[param] = value[0].run { this.toDoubleOrNull() ?: this.toInt().toDouble() }
+				}
+			}
+		}
+		return Ret.ok(eventModel.addEventOffer(id, dateId, offerName, deposits = depositMap,
+				prices = priceMap, currency = currency))
 	}
 	
-	//	@PostMapping("/postSomething")
-	//	fun postSomething(@RequestParam text: String, @RequestParam other: String): ResponseEntity<*> {
-	//		return ResponseEntity.ok(text + other)
-	//	}
-	//
-	//	@PostMapping("/generate")
-	//	fun generateEvent(@RequestParam(required = false) name: String?,
-	//	                  @RequestParam(required = false) startDateString: String?,
-	//	                  @RequestParam(required = false) endDateString: String?): ResponseEntity<*> {
-	//		return ResponseEntity.ok(eventRepo.save(Event(title = name
-	//				?: UUID.randomUUID().toString().substring(0..7)).also {
-	//			if (startDateString != null) {
-	//				it.startDate = LocalDateTime.parse(startDateString)
-	//			}
-	//			if (endDateString != null) {
-	//				it.endDate = LocalDateTime.parse(endDateString)
-	//			}
-	//		}))
-	//	}
-	//
+	/**
+	 * Delete offer by name.
+	 */
+	@PostMapping("/offers/delete")
+	fun todoOffers(@RequestParam id: String, @RequestParam dateId: String, @RequestParam offerName: String): ResponseEntity<*> {
+		return Ret.ok(eventModel.removeEventOffer(id, dateId, offerName))
+	}
+	
+	/**
+	 * Sets whether event has free seats in specific date offering or not.
+	 */
+	@PostMapping("/offer/free")
+	fun setHasFreeSeatsInOffer(@RequestParam id: String, @RequestParam dateId: String,
+	                           @RequestParam hasFree: Boolean): ResponseEntity<*> {
+		return Ret.ok(eventModel.setFreeSeats(id, dateId, hasFree))
+	}
+	
+	@PostMapping("/photo/add")
+	fun addPhotos(@RequestParam id: String,
+	              @RequestParam photos: Array<String>): ResponseEntity<*> {
+		return Ret.ok(eventModel.addPhotos(id, *photos))
+	}
+	
+	@PostMapping("/photo/set")
+	fun setPhotos(@RequestParam id: String,
+	              @RequestParam photos: Array<String>): ResponseEntity<*> {
+		return Ret.ok(eventModel.setPhotos(id, *photos))
+	}
+	
+	@PostMapping("/photo/delete")
+	fun deletePhotos(@RequestParam id: String,
+	                 @RequestParam photos: Array<String>): ResponseEntity<*> {
+		return Ret.ok(eventModel.removePhotos(id, *photos))
+	}
+	
+	
 	//	@GetMapping("/rank")
 	//	fun getEvent(@RequestParam(defaultValue = "50") rank: Int,
 	//	             @RequestParam(defaultValue = "0") page: Int) =

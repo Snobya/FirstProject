@@ -1,7 +1,7 @@
 package com.avant.model
 
 import com.avant.entity.Event
-import com.avant.repo.EventRepository
+import com.avant.repo.EventRepo
 import com.avant.util.isAnyOf
 import com.avant.util.print
 import org.junit.jupiter.api.*
@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import java.util.*
 
 @ExtendWith(SpringExtension::class)
@@ -22,17 +23,17 @@ internal class EventModelTest {
 	@Autowired
 	private lateinit var eventModel: EventModel
 	@Autowired
-	private lateinit var eventRepo: EventRepository
+	private lateinit var eventRepo: EventRepo
 	
-	private val testId = "test-event-id"
+	private val testId = "test-event-id-" + UUID.randomUUID().toString()
 	
 	@BeforeAll
-	fun createIfNotExist() {
+	fun setup() {
 		var event: Event
 		try {
 			event = eventModel.getEvent(testId)
 		} catch (e: Exception) {
-			event = eventModel.create("Test event", "Test info", "test-pic.jpg")
+			event = eventModel.create("Test event", "Test info", arrayOf("test-pic.jpg"))
 			eventRepo.deleteById(event.id)
 			event.id = testId
 			eventRepo.save(event)
@@ -52,19 +53,19 @@ internal class EventModelTest {
 	
 	@Test
 	fun between() {
-		assertNotEquals(eventModel.between(LocalDateTime.now(), LocalDateTime.now().plusYears(30)).size, 0)
+		assertNotEquals(eventModel.between(LocalDateTime.now().minusYears(1), LocalDateTime.now().plusYears(30)).size, 0)
 	}
 	
 	@Test
 	fun edit() {
 		val testDescription = "Info is now: " + UUID.randomUUID().toString().slice(0..8)
 		eventModel.edit(eventId = testId, info = testDescription)
-		assertEquals(eventModel.getEvent("test-event-id").info, testDescription)
+		assertEquals(eventModel.getEvent(testId).info, testDescription)
 	}
 	
 	@Test
 	fun createAndDelete() {
-		val id = eventModel.create("Test event #2", "Gotta be deleted", "something.jpg").id
+		val id = eventModel.create("Test event #2", "Gotta be deleted", arrayOf("something.jpg")).id
 		eventModel.deleteEvent(id)
 		assertThrows(Exception::class.java, { eventModel.getEvent(id) })
 	}
@@ -99,7 +100,7 @@ internal class EventModelTest {
 	
 	@Test
 	fun addEventDate() {
-		val date = LocalDateTime.now().plusDays(1)
+		val date = ZonedDateTime.now().plusDays(1)
 		eventModel.addEventDate(testId, date,
 				date.plusHours(20)).datelist
 		assertTrue(eventModel.getEvent(testId).datelist.contains(date))
@@ -108,15 +109,14 @@ internal class EventModelTest {
 	@Test
 	fun addEventOffer() {
 		val date = eventModel.getEvent(testId).dates[0]
-		eventModel.addEventOffer(testId, date.id, "Deluxe", mapOf("Студент" to 5500.0, "Обычный" to 8000.0))
-		eventModel.addEventOffer(testId, date.id, "Semi-Luxe", mapOf("Студент" to 3500.0, "Обычный" to 6000.0))
-		eventModel.addEventOffer(testId, date.id, "Economy", mapOf("Студент" to 2200.0, "Обычный" to 3000.0))
+		val currency = "UAH"
+		eventModel.addEventOffer(testId, date.id, "Deluxe", mapOf("Студент" to 5500.0, "Обычный" to 8000.0), mapOf("Студент" to 5500.0, "Обычный" to 8000.0), currency)
+		eventModel.addEventOffer(testId, date.id, "Semi-Luxe", mapOf("Студент" to 5500.0, "Обычный" to 8000.0), mapOf("Студент" to 3500.0, "Обычный" to 6000.0), currency)
+		eventModel.addEventOffer(testId, date.id, "Economy", mapOf("Студент" to 5500.0, "Обычный" to 8000.0), mapOf("Студент" to 2200.0, "Обычный" to 3000.0), currency)
 		assertEquals(eventModel.getEventOffers(testId, date.id).offers.size, date.offers.size + 3)
 		for (offer in eventModel.getEventOffers(testId, date.id).offers) {
-			assertEquals(offer.prices.size, 2)
+			assertEquals(offer.offerTypes.size, 2)
 		}
 	}
-	
-	
 	
 }

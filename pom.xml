@@ -16,10 +16,16 @@
 
 	<properties>
 		<java.version>1.8</java.version>
-		<kotlin.version>1.2.10</kotlin.version>
+		<kotlin.version>1.2.30</kotlin.version>
 	</properties>
 
 	<dependencies>
+
+		<dependency>
+			<groupId>com.github.NikichXP</groupId>
+			<artifactId>LibPack</artifactId>
+			<version>4247a9c0df</version>
+		</dependency>
 
 		<!-- db -->
 		<dependency>
@@ -94,6 +100,18 @@
 			<groupId>com.fasterxml.jackson.module</groupId>
 			<artifactId>jackson-module-kotlin</artifactId>
 			<version>2.9.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>21.0</version>
+		</dependency>
+
+		<!-- payment -->
+		<dependency>
+			<groupId>com.liqpay</groupId>
+			<artifactId>liqpay-sdk</artifactId>
+			<version>0.6</version>
 		</dependency>
 
 		<!-- others -->
@@ -257,6 +275,11 @@
 		<repository>
 			<id>central</id>
 			<url>http://jcenter.bintray.com</url>
+		</repository>
+		<repository> <!-- Liq Pay repo -->
+			<id>bintray-stokito-maven</id>
+			<name>stokito-maven</name>
+			<url>https://dl.bintray.com/stokito/maven</url>
 		</repository>
 		<repository>
 			<id>spring-releases</id>
