@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*
 import java.io.FileNotFoundException
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import javax.servlet.http.HttpServletRequest
 
 /**
@@ -175,9 +177,12 @@ class EventAPI(
 	fun dateAdd(@RequestParam id: String,
 	            @RequestParam startDate: String,
 	            @RequestParam endDate: String): ResponseEntity<*> {
+		val zonedStartDate = ZonedDateTime.of(LocalDateTime.parse(startDate), ZoneId.of("+2"))
 		return Ret.ok(eventModel.addEventDate(
-				id, LocalDateTime.parse(startDate), LocalDateTime.parse(endDate)
-		).dates.find { it.startDate == LocalDateTime.parse(startDate) }?.id
+				id,
+				zonedStartDate,
+				ZonedDateTime.of(LocalDateTime.parse(endDate), ZoneId.of("+2"))
+		).dates.find { it.startDate == zonedStartDate }?.id
 				?: throw IllegalStateException("Unexpected error occurred: date not found."))
 	}
 	
@@ -190,8 +195,8 @@ class EventAPI(
 	             @RequestParam(required = false) startDate: String?,
 	             @RequestParam(required = false) endDate: String?): ResponseEntity<*> {
 		return Ret.ok(eventModel.editEventDate(id, dateId,
-				startDate?.let { LocalDateTime.parse(it) },
-				endDate?.let { LocalDateTime.parse(it) }).dates)
+				startDate?.let { ZonedDateTime.of(LocalDateTime.parse(it), ZoneId.of("+2")) },
+				endDate?.let { ZonedDateTime.of(LocalDateTime.parse(it), ZoneId.of("+2")) }).dates)
 	}
 	
 	/**

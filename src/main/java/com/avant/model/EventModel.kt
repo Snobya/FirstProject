@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import java.io.FileNotFoundException
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 @Service
 class EventModel(
@@ -77,14 +78,14 @@ class EventModel(
 		it.photos.removeAll(photos)
 	}
 	
-	fun addEventDate(eventId: String, startDate: LocalDateTime, endDate: LocalDateTime) = updateEvent(eventId) {
+	fun addEventDate(eventId: String, startDate: ZonedDateTime, endDate: ZonedDateTime) = updateEvent(eventId) {
 		it.addDate(Event.EventDate(startDate = startDate, endDate = endDate))
 		launch {
 			gSheetsModelProxy.onEventUpdate(it)
 		}
 	}
 	
-	fun editEventDate(eventId: String, dateId: String, startDate: LocalDateTime? = null, endDate: LocalDateTime? = null) = updateEvent(eventId) {
+	fun editEventDate(eventId: String, dateId: String, startDate: ZonedDateTime? = null, endDate: ZonedDateTime? = null) = updateEvent(eventId) {
 		val date = (it.dates.findOne { it.id == dateId } ?: throw FileNotFoundException("DateId not found"))
 		startDate?.apply { date.startDate = this }
 		endDate?.apply { date.endDate = this }

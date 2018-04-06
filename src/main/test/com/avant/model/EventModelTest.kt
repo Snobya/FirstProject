@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import java.util.*
 
 @ExtendWith(SpringExtension::class)
@@ -32,7 +33,7 @@ internal class EventModelTest {
 		try {
 			event = eventModel.getEvent(testId)
 		} catch (e: Exception) {
-			event = eventModel.create("Test event", "Test info", "test-pic.jpg")
+			event = eventModel.create("Test event", "Test info", arrayOf("test-pic.jpg"))
 			eventRepo.deleteById(event.id)
 			event.id = testId
 			eventRepo.save(event)
@@ -64,7 +65,7 @@ internal class EventModelTest {
 	
 	@Test
 	fun createAndDelete() {
-		val id = eventModel.create("Test event #2", "Gotta be deleted", "something.jpg").id
+		val id = eventModel.create("Test event #2", "Gotta be deleted", arrayOf("something.jpg")).id
 		eventModel.deleteEvent(id)
 		assertThrows(Exception::class.java, { eventModel.getEvent(id) })
 	}
@@ -99,7 +100,7 @@ internal class EventModelTest {
 	
 	@Test
 	fun addEventDate() {
-		val date = LocalDateTime.now().plusDays(1)
+		val date = ZonedDateTime.now().plusDays(1)
 		eventModel.addEventDate(testId, date,
 				date.plusHours(20)).datelist
 		assertTrue(eventModel.getEvent(testId).datelist.contains(date))

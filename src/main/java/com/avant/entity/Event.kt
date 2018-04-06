@@ -6,10 +6,7 @@ import com.avant.util.findOne
 import com.avant.util.toMillis
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.DBRef
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneId
+import java.time.*
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -22,9 +19,9 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 	var headImg = mutableListOf<String>()
 	var content = mutableListOf<Pair<String, String>>()
 	var photos = mutableListOf<String>() // photos id's
-	var closestEvent: LocalDateTime = LocalDateTime.of(LocalDate.of(2030, 1, 1), LocalTime.now())
+	var closestEvent: ZonedDateTime = ZonedDateTime.of(LocalDate.of(2030, 1, 1), LocalTime.now(), ZoneId.of("+2"))
 	var dates = mutableListOf<EventDate>()
-	val datelist: List<LocalDateTime>
+	val datelist: List<ZonedDateTime>
 		get() = dates.map { it.startDate }
 	
 	
@@ -36,7 +33,7 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 	fun getDate(id: String): EventDate = dates.findOne { it.id == id }
 			?: throw IllegalArgumentException("Wrong date id")
 	
-	fun findClosestDate(): LocalDateTime {
+	fun findClosestDate(): ZonedDateTime {
 		closestEvent = this.datelist.sorted().first()
 		return closestEvent
 	}
@@ -46,16 +43,16 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 		get() = dates.map { it.startDateTimeStamp }
 	
 	class EventDate(var id: String = UUID.randomUUID().toString().substring(0..7),
-	                var startDate: LocalDateTime, var endDate: LocalDateTime) {
+	                var startDate: ZonedDateTime, var endDate: ZonedDateTime) {
 		
 		var offers = ArrayList<EventOffer>()
 		var hasFreePlaces = false
 		
 		// frontend:
 		val startDateTimeStamp: Long
-			get() = startDate.toMillis()
+			get() = startDate.toInstant().toEpochMilli()
 		val endDateTimeStamp: Long
-			get() = startDate.toMillis()
+			get() = startDate.toInstant().toEpochMilli()
 		
 		fun getDepositPrice(name: String, type: String): Double =
 			offers.findOne { it.name == name }?.run {
