@@ -52,8 +52,10 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 		var hasFreePlaces = false
 		
 		// frontend:
-		val startDateTimeStamp = startDate.toMillis()
-		val endDateTimeStamp = startDate.toMillis()
+		val startDateTimeStamp: Long
+			get() = startDate.toMillis()
+		val endDateTimeStamp: Long
+			get() = startDate.toMillis()
 		
 		fun getDepositPrice(name: String, type: String): Double =
 			offers.findOne { it.name == name }?.run {
