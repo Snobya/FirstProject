@@ -19,7 +19,7 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 	@DBRef
 	var curator: User? = null
 	var info: String = "Here is nothing here yet."
-	var headImg: String = DefaultData.instance.defaultImage()
+	var headImg = mutableListOf<String>()
 	var content = mutableListOf<Pair<String, String>>()
 	var photos = mutableListOf<String>() // photos id's
 	var closestEvent: LocalDateTime = LocalDateTime.of(LocalDate.of(2030, 1, 1), LocalTime.now())

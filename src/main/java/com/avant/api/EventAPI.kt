@@ -1,10 +1,8 @@
 package com.avant.api
 
 import com.avant.model.EventModel
-import com.avant.repo.EventRepo
 import com.avant.util.Ret
 import com.avant.util.isAnyOf
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.io.FileNotFoundException
@@ -80,13 +78,13 @@ class EventAPI(
 	 * Create event with no dates
 	 * @param title title of event
 	 * @param info is info of event
-	 * @param img is photo ID, which can be obtained via FileAPI (WARNING: FileAPI is suspended sue to Amazon S3 issues)
+	 * @param images is photo ID, which can be obtained via FileAPI
 	 */
 	@PostMapping("/create")
 	fun createEvent(@RequestParam title: String,
 	                @RequestParam info: String,
-	                @RequestParam img: String): ResponseEntity<*> {
-		return Ret.ok(eventModel.create(title, info, img))
+	                @RequestParam images: Array<String>): ResponseEntity<*> {
+		return Ret.ok(eventModel.create(title, info, images))
 	}
 	
 	/**
@@ -97,8 +95,8 @@ class EventAPI(
 	fun editEvent(@RequestParam id: String,
 	              @RequestParam(required = false) title: String?,
 	              @RequestParam(required = false) info: String?,
-	              @RequestParam(required = false) image: String?): ResponseEntity<*> {
-		return Ret.ok(eventModel.edit(id, title, info, image))
+	              @RequestParam(required = false) images: Array<String>?): ResponseEntity<*> {
+		return Ret.ok(eventModel.edit(id, title, info, images))
 	}
 	
 	/**

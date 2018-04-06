@@ -29,18 +29,18 @@ class EventModel(
 	
 	fun list(page: Int, pageSize: Int) = eventRepo.findAll(PageRequest.of(page, pageSize))
 	
-	fun create(title: String, info: String, image: String) =
+	fun create(title: String, info: String, image: Array<String>) =
 		eventRepo.save(Event(title = title).apply {
 			this.info = info
-			this.headImg = image
+			this.headImg = image.toMutableList()
 		}).also {
 			launch { gSheetsModelProxy.onEventCreate(it) }
 		}
 	
-	fun edit(eventId: String, title: String? = null, info: String? = null, image: String? = null) = updateEvent(eventId) {
+	fun edit(eventId: String, title: String? = null, info: String? = null, image: Array<String>? = null) = updateEvent(eventId) {
 		title?.apply { it.title = this }
 		info?.apply { it.info = this }
-		image?.apply { it.headImg = this }
+		image?.apply { it.headImg = this.toMutableList() }
 	}
 	
 	fun setCurator(eventId: String, userId: String) = updateEvent(eventId) {

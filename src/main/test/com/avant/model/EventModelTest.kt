@@ -4,7 +4,6 @@ import com.avant.entity.Event
 import com.avant.repo.EventRepo
 import com.avant.util.isAnyOf
 import com.avant.util.print
-import com.avant.util.tryElse
 import org.junit.jupiter.api.*
 
 import org.junit.jupiter.api.Assertions.*
