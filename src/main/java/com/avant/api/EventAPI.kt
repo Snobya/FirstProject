@@ -182,7 +182,7 @@ class EventAPI(
 				id,
 				zonedStartDate,
 				ZonedDateTime.of(LocalDateTime.parse(endDate), ZoneId.of("+2"))
-		).dates.find { it.startDate == zonedStartDate }?.id
+		).dates.find { it.startDate.isEqual(zonedStartDate) }?.id
 				?: throw IllegalStateException("Unexpected error occurred: date not found."))
 	}
 	
