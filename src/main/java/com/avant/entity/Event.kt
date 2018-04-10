@@ -52,7 +52,7 @@ data class Event(@Id var id: String = UUID.randomUUID().toString(),
 		val startDateTimeStamp: Long
 			get() = startDate.toInstant().toEpochMilli()
 		val endDateTimeStamp: Long
-			get() = startDate.toInstant().toEpochMilli()
+			get() = endDate.toInstant().toEpochMilli()
 		
 		fun getDepositPrice(name: String, type: String): Double =
 			offers.findOne { it.name == name }?.run {
