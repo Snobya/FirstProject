@@ -60,8 +60,16 @@ class EventAPI(
 	fun monthly(@RequestParam month: String): ResponseEntity<*> {
 		val firstDay = LocalDate.parse("$month-01")
 		val lastDay = firstDay.withDayOfMonth(firstDay.lengthOfMonth())
-		return Ret.ok(eventModel.between(firstDay.atStartOfDay(),
-				lastDay.atTime(23, 59)))
+		
+		return Ret.ok(eventModel.all().filter {
+			it.dates.any {
+				return@any it.startDate.isAfter(firstDay.atStartOfDay(ZoneId.of("+2"))) &&
+						it.startDate.isBefore(lastDay.atStartOfDay(ZoneId.of("+2")))
+			}
+		}) // TODO REMOVE THIS
+		
+		//		return Ret.ok(eventModel.between(firstDay.atStartOfDay(),
+		//				lastDay.atTime(23, 59)))
 	}
 	
 	/**
