@@ -5,7 +5,6 @@ import com.avant.model.LiqPayModel
 import com.avant.model.OrderModel
 import com.avant.repo.EventRepo
 import com.avant.util.Ret
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
@@ -18,8 +17,31 @@ class OrderAPI(
 		val orderModel: OrderModel,
 		val liqPayModel: LiqPayModel) {
 	
+	/**
+	 * Creates an order. eventId and dateId are being selected from event entity.
+	 * usersCount is count of clients. Mail and comment are optional (you can specify mail in another method).
+	 * @param request also must contain following data for EVERY person, followed by number of this client, starts with 0.
+	 * Params are: name, phone, document (optional, can be missed), bday (it is birthday), type (Stamdart, Luxe, Econom, as in event's offer) and
+	 * class (Student, Children etc., as in event's offer)
+	 * Example args for request:
+	 * eventId = abc1234
+	 * dateId = efg567
+	 * usersCount = 2
+	 * name0 = Ivan Petrov
+	 * name1 = Anna Glushko
+	 * phone0 = +380501234567
+	 * phone1 = +380678901234
+	 * document1 = KB14521243 (! notice: there is no document0 !)
+	 * type0 = Econom
+	 * class0 = Normal
+	 * type1 = Econom
+	 * class1 = Student
+	 * bday0 = 1975-05-31
+	 * bday1 = 1995-12-31
+	 * comment = single beds, please
+	 */
 	@PostMapping("/create")
-	fun create(req: HttpServletRequest,
+	fun create(request: HttpServletRequest,
 	           @RequestParam eventId: String,
 	           @RequestParam dateId: String,
 	           @RequestParam usersCount: Int,
@@ -31,12 +53,12 @@ class OrderAPI(
 		
 		for (n in 0 until usersCount) {
 			persons += Person(
-					req.getParameter("name$n"),
-					req.getParameter("phone$n"),
-					req.getParameter("document$n"),
-					req.getParameter("type$n"),
-					req.getParameter("class$n"),
-					LocalDate.parse(req.getParameter("bday$n"))
+					request.getParameter("name$n"),
+					request.getParameter("phone$n"),
+					request.getParameter("document$n"),
+					request.getParameter("type$n"),
+					request.getParameter("class$n"),
+					LocalDate.parse(request.getParameter("bday$n"))
 			)
 		}
 		
@@ -51,16 +73,21 @@ class OrderAPI(
 		return requestPayment(order.id, order.getDepositPrice(), true)
 	}
 	
+	/**
+	 * Sets mail to order. If order already has mail it can be set only with admin's token.
+	 * If you can't do this, you'll have 403 returned with specific message.
+	 */
 	@RequestMapping("/setMail")
-	fun setMail(@RequestParam("orderid") orderid: String, @RequestParam("mail") mail: String,
-	            @RequestParam(value = "token", required = false) token: String): ResponseEntity<*> {
-		
-		// TODO check login or something
-		
-		return Ret.ok(orderModel.setMail(orderid, mail))
+	fun setMail(@RequestParam orderId: String, @RequestParam mail: String,
+	            @RequestParam(required = false) token: String?): ResponseEntity<*> {
+		return Ret.ok(orderModel.setMail(orderId, mail, token))
 	}
 	
-	
+	/**
+	 * Request payment form for order.
+	 * @param sandbox is sandbox state. this param will be removed on release. If true, funds will not be taken from card.
+	 * @param cash is amount to refill. Optional. If not set, deposit price will be set.
+	 */
 	@GetMapping("/request")
 	fun requestPayment(@RequestParam orderId: String,
 	                   @RequestParam(required = false) cash: Double?,
@@ -68,6 +95,9 @@ class OrderAPI(
 		return Ret.ok(orderModel.requestOrderPayment(orderId, cash, sandbox))
 	}
 	
+	/**
+	 * This is for LiqPay API. DO NOT USE THIS!
+	 */
 	@RequestMapping("/process")
 	fun success(req: HttpServletRequest): ResponseEntity<*> {
 		liqPayModel.processRequest(req)
