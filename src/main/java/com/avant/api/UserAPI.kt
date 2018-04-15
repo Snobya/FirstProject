@@ -3,10 +3,7 @@ package com.avant.api
 import com.avant.model.UserService
 import com.avant.util.Ret
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 /**
  * Api for curators and logins
@@ -26,6 +23,18 @@ class UserAPI(
 		return Ret.ok(userService.register(login, pass).user)
 	}
 	
+	@GetMapping("/curators")
+	fun getCuratorList() = Ret.ok(userService.curatorList())
+	
+	/**
+	 * Set status or user by ID to curator.
+	 * if user's name is null - throws IllegalArgumentException (HTTP code 406).
+	 * if isCurator not passed - switches curator flag in user (true - false)
+	 */
+	@PostMapping("/curator/set")
+	fun setCurator(@RequestParam id: String, @RequestParam(required = false) isCurator: Boolean?) =
+		Ret.ok(userService.setCurator(id, isCurator))
+	
 	@PostMapping("/setData")
 	fun setData(@RequestParam id: String,
 	            @RequestParam(required = false) name: String? = null,
@@ -33,5 +42,6 @@ class UserAPI(
 	            @RequestParam(required = false) phone: String? = null): ResponseEntity<*> {
 		return Ret.ok(userService.setData(id, name, photo, phone))
 	}
+	
 	
 }

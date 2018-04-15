@@ -13,5 +13,6 @@ class User(private val mail: String) : Saveable {
 	var phone: String? = null
 	
 	var isAdmin = false
+	var isCurator = false
 	
 }
