@@ -1,8 +1,7 @@
 package com.avant.model
 
-import com.avant.auth.AuthController
-import com.avant.auth.AuthReasonController
-import com.avant.auth.User
+import com.avant.auth.*
+import com.avant.entity.AuthReason
 import com.avant.repo.MongoEntityInformationCreator
 import com.avant.util.Locks
 import org.springframework.data.mongodb.core.MongoTemplate
@@ -20,7 +19,9 @@ class UserService(
 	
 	val userRepo = mongoEntityInformationCreator.getSimpleMongoRepository(User::class.java)
 	
-	fun register(login: String, pass: String) = authReasonController.register(login, pass)
+	fun register(login: String, pass: String): AuthReason {
+		return authReasonController.register(login, pass)
+	}
 	
 	fun setData(id: String, name: String?, photo: String?, phone: String?) = updateUser(id) {
 		name?.apply { it.name = this }
