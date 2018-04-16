@@ -2,6 +2,8 @@ package com.avant.model
 
 import com.avant.auth.User
 import com.avant.util.int
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.runBlocking
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -39,7 +41,23 @@ internal class UserModelTest {
 	
 	@Test
 	fun testEdit() {
-		userService.
+		userService.setData(userId, "Some name", "pic.jpg", "+380501234567")
+		val user = userService.getUser(userId)
+		assertEquals(user.name, "Some name")
+		assertEquals(user.photo, "pic.jpg")
+		assertEquals(user.phone, "+380501234567")
+	}
+	
+	@Test
+	fun testCurators() = runBlocking {
+		val future = async { userService.curatorList().size }
+		val job = async { userService.setData(id = userId, name = "TestName") }
+		job.await()
+		val prevCount = future.await()
+		userService.setCurator(userId)
+		assertNotEquals(userService.curatorList().size, prevCount)
+		assertTrue { userService.curatorList().any { it.id == userId } }
+		return@runBlocking
 	}
 	
 	@AfterAll

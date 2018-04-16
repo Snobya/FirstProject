@@ -23,7 +23,7 @@ class UserService(
 		return authReasonController.register(login, pass)
 	}
 	
-	fun setData(id: String, name: String?, photo: String?, phone: String?) = updateUser(id) {
+	fun setData(id: String, name: String? = null, photo: String? = null, phone: String? = null) = updateUser(id) {
 		name?.apply { it.name = this }
 		photo?.apply { it.photo = this }
 		phone?.apply { it.phone = this }
@@ -32,7 +32,7 @@ class UserService(
 	fun curatorList(): List<User> =
 		mongoTemplate.find(Query.query(Criteria("isCurator").`is`(true)), User::class.java)
 	
-	fun setCurator(id: String, curator: Boolean?) = updateUser(id) {
+	fun setCurator(id: String, curator: Boolean? = null) = updateUser(id) {
 		if (it.name == null && curator != false) {
 			throw IllegalArgumentException("Name is not set.")
 		}
@@ -47,4 +47,6 @@ class UserService(
 		}
 		return user
 	}
+	
+	fun getUser(id: String) = authController.getUserById(id)
 }
