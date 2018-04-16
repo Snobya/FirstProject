@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.*
 class UserAPI(
 		val userService: UserService) {
 	
+	@GetMapping("/{id}")
+	fun getById(@PathVariable id: String) = userService.getUser(id).run { Ret.ok(this) }
+	
 	/**
 	 * Register a new curator.
 	 * @param isAdmin admins can create new users or modify existing. otherwise, created user is manager/moderator
