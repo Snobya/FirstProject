@@ -1,5 +1,6 @@
 package com.avant.model
 
+import com.avant.auth.AuthController
 import com.avant.entity.Event
 import com.avant.entity.Order
 import com.avant.entity.Payment
@@ -16,6 +17,7 @@ class OrderModel(
 		val eventModel: EventModel,
 		val mailSender: MailSender,
 		val liqPayModel: LiqPayModel,
+		val authController: AuthController,
 		val gSheetsModelProxy: GSheetsModelProxy) {
 	
 	fun createOrder(eventId: String, dateId: String, mail: String?, comment: String?): Order {
@@ -38,8 +40,12 @@ class OrderModel(
 		}
 	}
 	
-	fun setMail(id: String, mail: String) = updateOrder(id) {
-		if (it.mail == null) {
+	fun setMail(id: String, mail: String, token: String?) = updateOrder(id) {
+		if (it.mail != null) {
+			if (token == null || !authController.getUser(token).isAdmin) {
+				throw IllegalAccessError("You can't do this.")
+			}
+		} else {
 			launch { mailSender.sendCreateOrderEmail(it) }
 		}
 		it.mail == mail

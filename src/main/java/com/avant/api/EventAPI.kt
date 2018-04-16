@@ -22,7 +22,7 @@ class EventAPI(
 	
 	@GetMapping("/{id}")
 	fun getById(@PathVariable id: String): ResponseEntity<*> {
-		return Ret.ok(eventModel.eventRepo.findById(id).orElseThrow { FileNotFoundException("Event not found") })
+		return Ret.ok(eventModel.getEvent(id))
 	}
 	
 	/**
@@ -60,8 +60,16 @@ class EventAPI(
 	fun monthly(@RequestParam month: String): ResponseEntity<*> {
 		val firstDay = LocalDate.parse("$month-01")
 		val lastDay = firstDay.withDayOfMonth(firstDay.lengthOfMonth())
-		return Ret.ok(eventModel.between(firstDay.atStartOfDay(),
-				lastDay.atTime(23, 59)))
+		
+		return Ret.ok(eventModel.all().filter {
+			it.dates.any {
+				return@any it.startDate.isAfter(firstDay.atStartOfDay(ZoneId.of("+2"))) &&
+						it.startDate.isBefore(lastDay.atStartOfDay(ZoneId.of("+2")))
+			}
+		}) // TODO REMOVE THIS
+		
+		//		return Ret.ok(eventModel.between(firstDay.atStartOfDay(),
+		//				lastDay.atTime(23, 59)))
 	}
 	
 	/**
@@ -182,7 +190,7 @@ class EventAPI(
 				id,
 				zonedStartDate,
 				ZonedDateTime.of(LocalDateTime.parse(endDate), ZoneId.of("+2"))
-		).dates.find { it.startDate == zonedStartDate }?.id
+		).dates.find { it.startDate.isEqual(zonedStartDate) }?.id
 				?: throw IllegalStateException("Unexpected error occurred: date not found."))
 	}
 	

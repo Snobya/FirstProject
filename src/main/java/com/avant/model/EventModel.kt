@@ -21,7 +21,9 @@ class EventModel(
 	
 	fun ping() = "ping"
 	
-	fun closest(count: Int): List<Event> = eventRepo.findAll(PageRequest.of(0, count, Sort.Direction.ASC, "closestEvent")).toList()
+	fun closest(count: Int): List<Event> = eventRepo
+		.findAll(PageRequest.of(0, count, Sort.Direction.ASC, "closestEvent"))
+		.toList()
 	
 	fun between(firstDay: LocalDateTime, lastDay: LocalDateTime): List<Event> =
 		eventRepo.findByClosestEventBetween(firstDay, lastDay)

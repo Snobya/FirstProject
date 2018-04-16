@@ -4,7 +4,7 @@ import com.avant.entity.Saveable
 import com.avant.util.IDGenerator
 import org.springframework.data.annotation.Id
 
-class User(private val mail: String) : Saveable {
+class User(val mail: String) : Saveable {
 	
 	@Id
 	override var id: String = IDGenerator.longId()
@@ -13,5 +13,6 @@ class User(private val mail: String) : Saveable {
 	var phone: String? = null
 	
 	var isAdmin = false
+	var isCurator = false
 	
 }

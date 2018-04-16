@@ -27,16 +27,19 @@ class NewsAPI @Autowired constructor(mongoEntityInformationCreator: MongoEntityI
 	}
 	
 	@PostMapping("/create")
-	fun create(@RequestParam title: String, @RequestParam content: String): ResponseEntity<*> {
+	fun create(@RequestParam title: String, @RequestParam content: String,
+	           @RequestParam(required = false) image: String?): ResponseEntity<*> {
 		return Ret.ok(repo.save(NewsPost(title = title, content = content)))
 	}
 	
 	@PostMapping("/update")
-	fun update(@RequestParam id: String, @RequestParam(required = false) title: String? = null,
-	           @RequestParam(required = false) content: String? = null): ResponseEntity<*> {
+	fun update(@RequestParam id: String, @RequestParam(required = false) title: String?,
+	           @RequestParam(required = false) content: String?,
+	           @RequestParam(required = false) image: String?): ResponseEntity<*> {
 		val post = repo.findById(id).orElseThrow { FileNotFoundException("News not found") }
 		title?.apply { post.title = this }
 		content?.apply { post.content = this }
+		image?.apply { post.image = this }
 		return Ret.ok(repo.save(post))
 	}
 }

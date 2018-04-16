@@ -103,7 +103,11 @@ internal class EventModelTest {
 		val date = ZonedDateTime.now().plusDays(1)
 		eventModel.addEventDate(testId, date,
 				date.plusHours(20)).datelist
-		assertTrue(eventModel.getEvent(testId).datelist.contains(date))
+		
+		println(date)
+		println(eventModel)
+		
+		assertTrue(eventModel.getEvent(testId).datelist.find { it.isEqual(date) } != null)
 	}
 	
 	@Test
