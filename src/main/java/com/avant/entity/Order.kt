@@ -3,7 +3,7 @@ package com.avant.entity
 import org.springframework.data.annotation.Id
 import java.util.*
 
-class Order(@Id var id: String = UUID.randomUUID().toString(), var event: Event, dateId: String) {
+class Order(@Id var id: String = UUID.randomUUID().toString(), var event: Event, var dateId: String) {
 	
 	var mail: String? = null
 	var comment: String? = null
